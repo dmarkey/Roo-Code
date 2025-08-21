@@ -60,6 +60,7 @@ export const chutesModels = {
 		inputPrice: 0,
 		outputPrice: 0,
 		description: "DeepSeek V3 model.",
+	},
 	"deepseek-ai/DeepSeek-V3.1": {
 		maxTokens: 63840,
 		contextWindow: 163840,
@@ -68,7 +69,6 @@ export const chutesModels = {
 		inputPrice: 0,
 		outputPrice: 0,
 		description: "DeepSeek V3.1 model.",
-	},
 	},
 	"unsloth/Llama-3.3-70B-Instruct": {
 		maxTokens: 32768, // From Groq
