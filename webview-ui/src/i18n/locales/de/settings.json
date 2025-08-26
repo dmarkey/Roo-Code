@@ -719,6 +719,10 @@
 		"ASSISTANT_MESSAGE_PARSER": {
 			"name": "Neuen Nachrichtenparser verwenden",
 			"description": "Aktiviere den experimentellen Streaming-Nachrichtenparser, der lange Antworten durch effizientere Verarbeitung spürbar schneller macht."
+		},
+		"NEW_TASK_REQUIRE_TODOS": {
+			"name": "'todos'-Liste für neue Aufgaben anfordern",
+			"description": "Wenn aktiviert, erfordert das new_task-Tool die Angabe eines todos-Parameters. Dies stellt sicher, dass alle neuen Aufgaben mit einer klaren Zielliste beginnen. Wenn deaktiviert (Standard), bleibt der todos-Parameter aus Gründen der Abwärtskompatibilität optional."
 		}
 	},
 	"promptCaching": {
@@ -791,7 +795,8 @@
 		"modelAvailability": "Die von dir angegebene Modell-ID ({{modelId}}) ist nicht verfügbar. Bitte wähle ein anderes Modell.",
 		"providerNotAllowed": "Anbieter '{{provider}}' ist von deiner Organisation nicht erlaubt",
 		"modelNotAllowed": "Modell '{{model}}' ist für Anbieter '{{provider}}' von deiner Organisation nicht erlaubt",
-		"profileInvalid": "Dieses Profil enthält einen Anbieter oder ein Modell, das von deiner Organisation nicht erlaubt ist"
+		"profileInvalid": "Dieses Profil enthält einen Anbieter oder ein Modell, das von deiner Organisation nicht erlaubt ist",
+		"qwenCodeOauthPath": "Du musst einen gültigen OAuth-Anmeldedaten-Pfad angeben"
 	},
 	"placeholders": {
 		"apiKey": "API-Schlüssel eingeben...",

@@ -30,6 +30,7 @@ import {
 	ChutesHandler,
 	LiteLLMHandler,
 	ClaudeCodeHandler,
+	QwenCodeHandler,
 	SambaNovaHandler,
 	IOIntelligenceHandler,
 	DoubaoHandler,
@@ -108,6 +109,8 @@ export function buildApiHandler(configuration: ProviderSettings): ApiHandler {
 			return new DeepSeekHandler(options)
 		case "doubao":
 			return new DoubaoHandler(options)
+		case "qwen-code":
+			return new QwenCodeHandler(options)
 		case "moonshot":
 			return new MoonshotHandler(options)
 		case "vscode-lm":
@@ -143,6 +146,8 @@ export function buildApiHandler(configuration: ProviderSettings): ApiHandler {
 		case "io-intelligence":
 			return new IOIntelligenceHandler(options)
 		case "roo":
+			// Never throw exceptions from provider constructors
+			// The provider-proxy server will handle authentication and return appropriate error codes
 			return new RooHandler(options)
 		case "featherless":
 			return new FeatherlessHandler(options)

@@ -720,6 +720,10 @@
 		"ASSISTANT_MESSAGE_PARSER": {
 			"name": "新しいメッセージパーサーを使う",
 			"description": "実験的なストリーミングメッセージパーサーを有効にします。長い回答をより効率的に処理し、遅延を減らします。"
+		},
+		"NEW_TASK_REQUIRE_TODOS": {
+			"name": "新しいタスクには'todos'リストを必須にする",
+			"description": "有効にすると、new_taskツールはtodosパラメータの提供が必須になります。これにより、すべての新しいタスクが明確な目的のリストで開始されることが保証されます。無効（デフォルト）の場合、下位互換性のためにtodosパラメータはオプションのままです。"
 		}
 	},
 	"promptCaching": {
@@ -792,7 +796,8 @@
 		"modelAvailability": "指定されたモデルID（{{modelId}}）は利用できません。別のモデルを選択してください。",
 		"providerNotAllowed": "プロバイダー「{{provider}}」は組織によって許可されていません",
 		"modelNotAllowed": "モデル「{{model}}」はプロバイダー「{{provider}}」に対して組織によって許可されていません",
-		"profileInvalid": "このプロファイルには、組織によって許可されていないプロバイダーまたはモデルが含まれています"
+		"profileInvalid": "このプロファイルには、組織によって許可されていないプロバイダーまたはモデルが含まれています",
+		"qwenCodeOauthPath": "有効なOAuth認証情報のパスを提供する必要があります"
 	},
 	"placeholders": {
 		"apiKey": "API キーを入力...",

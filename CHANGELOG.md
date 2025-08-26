@@ -1,5 +1,51 @@
 # Roo Code Changelog
 
+## [3.26.0] - 2025-08-26
+
+- Sonic -> Grok Code Fast
+- feat: Add Qwen Code CLI API Support with OAuth Authentication (thanks @evinelias and Cline!)
+- feat: Add Deepseek v3.1 to Fireworks AI provider (#7374 by @dmarkey, PR by @app/roomote)
+- Add a built-in /init slash command (thanks @mrubens and @hannesrudolph!)
+- Fix: Make auto approve toggle trigger stay (#3909 by @kyle-apex, PR by @elianiva)
+- Fix: Preserve user input when selecting follow-up choices (#7316 by @teihome, PR by @daniel-lxs)
+- Fix: Handle Mistral thinking content as reasoning chunks (#6842 by @Biotrioo, PR by @app/roomote)
+- Fix: Resolve newTaskRequireTodos setting not working correctly (thanks @hannesrudolph!)
+- Fix: Requesty model listing (#7377 by @dtrugman, PR by @dtrugman)
+- feat: Hide static providers with no models from provider list (thanks @daniel-lxs!)
+- Add todos parameter to new_task tool usage in issue-fixer mode (thanks @hannesrudolph!)
+- Handle substitution patterns in command validation (thanks @mrubens!)
+- Mark code-workspace files as protected (thanks @mrubens!)
+- Update list of default allowed commands (thanks @mrubens!)
+- Follow symlinks in rooignore checks (thanks @mrubens!)
+- Show cache read and write prices for OpenRouter inference providers (thanks @chrarnoldus!)
+- chore(deps): Update dependency drizzle-kit to v0.31.4 (thanks @app/renovate!)
+
+## [3.25.23] - 2025-08-22
+
+- feat: add custom base URL support for Requesty provider (thanks @requesty-JohnCosta27!)
+- feat: add DeepSeek V3.1 model to Chutes AI provider (#7294 by @dmarkey, PR by @app/roomote)
+- Revert "feat: enable loading Roo modes from multiple files in .roo/modes directory" temporarily to fix a bug with mode installation
+
+## [3.25.22] - 2025-08-22
+
+- Add prompt caching support for Kimi K2 on Groq (thanks @daniel-lxs and @benank!)
+- Add documentation links for global custom instructions in UI (thanks @app/roomote!)
+
+## [3.25.21] - 2025-08-21
+
+- Ensure subtask results are provided to GPT-5 in OpenAI Responses API
+- Promote the experimental AssistantMessageParser to the default parser
+- Update DeepSeek models context window to 128k (thanks @JuanPerezReal)
+- Enable grounding features for Vertex AI (thanks @anguslees)
+- Allow orchestrator to pass TODO lists to subtasks
+- Improved MDM handling
+- Handle nullish token values in ContextCondenseRow to prevent UI crash (thanks @s97712)
+- Improved context window error handling for OpenAI and other providers
+- Add "installed" filter to Roo Marketplace (thanks @semidark)
+- Improve filesystem access checks (thanks @elianiva)
+- Support for loading Roo modes from multiple YAML files in the `.roo/modes/` directory (thanks @farazoman)
+- Add Featherless provider (thanks @DarinVerheijke)
+
 ## [3.25.20] - 2025-08-19
 
 - Add announcement for Sonic model

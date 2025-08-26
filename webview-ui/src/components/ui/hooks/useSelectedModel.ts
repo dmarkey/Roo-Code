@@ -52,6 +52,8 @@ import {
 	ioIntelligenceModels,
 	rooDefaultModelId,
 	rooModels,
+	qwenCodeDefaultModelId,
+	qwenCodeModels,
 	BEDROCK_CLAUDE_SONNET_4_MODEL_ID,
 } from "@roo-code/types"
 
@@ -306,15 +308,32 @@ function getSelectedModel({
 			return { id, info }
 		}
 		case "roo": {
-			const id = apiConfiguration.apiModelId ?? rooDefaultModelId
-			const info = rooModels[id as keyof typeof rooModels]
+			const requestedId = apiConfiguration.apiModelId
+
+			// Check if the requested model exists in rooModels
+			if (requestedId && rooModels[requestedId as keyof typeof rooModels]) {
+				return {
+					id: requestedId,
+					info: rooModels[requestedId as keyof typeof rooModels],
+				}
+			}
+
+			// Fallback to default model if requested model doesn't exist or is not specified
+			return {
+				id: rooDefaultModelId,
+				info: rooModels[rooDefaultModelId as keyof typeof rooModels],
+			}
+		}
+		case "qwen-code": {
+			const id = apiConfiguration.apiModelId ?? qwenCodeDefaultModelId
+			const info = qwenCodeModels[id as keyof typeof qwenCodeModels]
 			return { id, info }
 		}
 		// case "anthropic":
 		// case "human-relay":
 		// case "fake-ai":
 		default: {
-			provider satisfies "anthropic" | "gemini-cli" | "human-relay" | "fake-ai"
+			provider satisfies "anthropic" | "gemini-cli" | "qwen-code" | "human-relay" | "fake-ai"
 			const id = apiConfiguration.apiModelId ?? anthropicDefaultModelId
 			const baseInfo = anthropicModels[id as keyof typeof anthropicModels]
 

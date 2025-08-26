@@ -720,6 +720,10 @@
 		"ASSISTANT_MESSAGE_PARSER": {
 			"name": "使用全新訊息解析器",
 			"description": "啟用實驗性的串流訊息解析器。透過更有效率地處理訊息，能顯著提升長回覆的效能。"
+		},
+		"NEW_TASK_REQUIRE_TODOS": {
+			"name": "要求新工作提供 'todos' 列表",
+			"description": "啟用後，new_task 工具將需要提供 todos 參數。這可以確保所有新工作都以明確的目標列表開始。停用時（預設），todos 參數保持可選，以實現向後相容。"
 		}
 	},
 	"promptCaching": {
@@ -792,7 +796,8 @@
 		"modelAvailability": "您指定的模型 ID ({{modelId}}) 目前無法使用，請選擇其他模型。",
 		"providerNotAllowed": "供應商 '{{provider}}' 不允許用於您的組織。",
 		"modelNotAllowed": "模型 '{{model}}' 不允許用於供應商 '{{provider}}'，您的組織不允許",
-		"profileInvalid": "此設定檔包含您的組織不允許的供應商或模型"
+		"profileInvalid": "此設定檔包含您的組織不允許的供應商或模型",
+		"qwenCodeOauthPath": "您必須提供有效的 OAuth 憑證路徑"
 	},
 	"placeholders": {
 		"apiKey": "請輸入 API 金鑰...",
