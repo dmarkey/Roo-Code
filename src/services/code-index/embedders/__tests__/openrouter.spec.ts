@@ -1,13 +1,65 @@
+import type { MockedClass, MockedFunction } from "vitest"
 import { describe, it, expect, beforeEach, vi } from "vitest"
+import { OpenAI } from "openai"
 import { OpenRouterEmbedder } from "../openrouter"
 import { getModelDimension, getDefaultModelId } from "../../../../shared/embeddingModels"
 
-// Mock global fetch
-const mockFetch = vi.fn()
-global.fetch = mockFetch
+// Mock the OpenAI SDK
+vi.mock("openai")
+
+// Mock TelemetryService
+vi.mock("@roo-code/telemetry", () => ({
+	TelemetryService: {
+		instance: {
+			captureEvent: vi.fn(),
+		},
+	},
+	TelemetryEventName: {},
+}))
+
+// Mock i18n
+vi.mock("../../../../i18n", () => ({
+	t: (key: string, params?: Record<string, any>) => {
+		const translations: Record<string, string> = {
+			"embeddings:validation.apiKeyRequired": "validation.apiKeyRequired",
+			"embeddings:authenticationFailed":
+				"Failed to create embeddings: Authentication failed. Please check your OpenRouter API key.",
+			"embeddings:failedWithStatus": `Failed to create embeddings after ${params?.attempts} attempts: HTTP ${params?.statusCode} - ${params?.errorMessage}`,
+			"embeddings:failedWithError": `Failed to create embeddings after ${params?.attempts} attempts: ${params?.errorMessage}`,
+			"embeddings:failedMaxAttempts": `Failed to create embeddings after ${params?.attempts} attempts`,
+			"embeddings:textExceedsTokenLimit": `Text at index ${params?.index} exceeds maximum token limit (${params?.itemTokens} > ${params?.maxTokens}). Skipping.`,
+			"embeddings:rateLimitRetry": `Rate limit hit, retrying in ${params?.delayMs}ms (attempt ${params?.attempt}/${params?.maxRetries})`,
+		}
+		return translations[key] || key
+	},
+}))
+
+const MockedOpenAI = OpenAI as MockedClass<typeof OpenAI>
 
 describe("OpenRouterEmbedder", () => {
 	const mockApiKey = "test-api-key"
+	let mockEmbeddingsCreate: MockedFunction<any>
+	let mockOpenAIInstance: any
+
+	beforeEach(() => {
+		vi.clearAllMocks()
+		vi.spyOn(console, "warn").mockImplementation(() => {})
+		vi.spyOn(console, "error").mockImplementation(() => {})
+
+		// Setup mock OpenAI instance
+		mockEmbeddingsCreate = vi.fn()
+		mockOpenAIInstance = {
+			embeddings: {
+				create: mockEmbeddingsCreate,
+			},
+		}
+
+		MockedOpenAI.mockImplementation(() => mockOpenAIInstance)
+	})
+
+	afterEach(() => {
+		vi.restoreAllMocks()
+	})
 
 	describe("constructor", () => {
 		it("should create an instance with valid API key", () => {
@@ -16,7 +68,7 @@ describe("OpenRouterEmbedder", () => {
 		})
 
 		it("should throw error with empty API key", () => {
-			expect(() => new OpenRouterEmbedder("")).toThrow("API key is required")
+			expect(() => new OpenRouterEmbedder("")).toThrow("validation.apiKeyRequired")
 		})
 
 		it("should use default model when none specified", () => {
@@ -46,93 +98,99 @@ describe("OpenRouterEmbedder", () => {
 
 		beforeEach(() => {
 			embedder = new OpenRouterEmbedder(mockApiKey)
-			mockFetch.mockClear()
 		})
 
 		it("should create embeddings successfully", async () => {
+			// Create base64 encoded embedding with values that can be exactly represented in Float32
+			const testEmbedding = new Float32Array([0.25, 0.5, 0.75])
+			const base64String = Buffer.from(testEmbedding.buffer).toString("base64")
+
 			const mockResponse = {
-				ok: true,
-				json: vi.fn().mockResolvedValue({
-					data: [
-						{
-							embedding: Buffer.from(new Float32Array([0.1, 0.2, 0.3]).buffer).toString("base64"),
-						},
-					],
-					usage: {
-						prompt_tokens: 5,
-						total_tokens: 5,
+				data: [
+					{
+						embedding: base64String,
 					},
-				}),
+				],
+				usage: {
+					prompt_tokens: 5,
+					total_tokens: 5,
+				},
 			}
 
-			mockFetch.mockResolvedValue(mockResponse)
+			mockEmbeddingsCreate.mockResolvedValue(mockResponse)
 
 			const result = await embedder.createEmbeddings(["test text"])
 
+			expect(mockEmbeddingsCreate).toHaveBeenCalledWith({
+				input: ["test text"],
+				model: "openai/text-embedding-3-large",
+				encoding_format: "base64",
+			})
 			expect(result.embeddings).toHaveLength(1)
-			expect(result.embeddings[0]).toEqual([0.1, 0.2, 0.3])
+			expect(result.embeddings[0]).toEqual([0.25, 0.5, 0.75])
 			expect(result.usage?.promptTokens).toBe(5)
 			expect(result.usage?.totalTokens).toBe(5)
 		})
 
 		it("should handle multiple texts", async () => {
+			const embedding1 = new Float32Array([0.25, 0.5])
+			const embedding2 = new Float32Array([0.75, 1.0])
+			const base64String1 = Buffer.from(embedding1.buffer).toString("base64")
+			const base64String2 = Buffer.from(embedding2.buffer).toString("base64")
+
 			const mockResponse = {
-				ok: true,
-				json: vi.fn().mockResolvedValue({
-					data: [
-						{
-							embedding: Buffer.from(new Float32Array([0.1, 0.2]).buffer).toString("base64"),
-						},
-						{
-							embedding: Buffer.from(new Float32Array([0.3, 0.4]).buffer).toString("base64"),
-						},
-					],
-					usage: {
-						prompt_tokens: 10,
-						total_tokens: 10,
+				data: [
+					{
+						embedding: base64String1,
 					},
-				}),
+					{
+						embedding: base64String2,
+					},
+				],
+				usage: {
+					prompt_tokens: 10,
+					total_tokens: 10,
+				},
 			}
 
-			mockFetch.mockResolvedValue(mockResponse)
+			mockEmbeddingsCreate.mockResolvedValue(mockResponse)
 
 			const result = await embedder.createEmbeddings(["text1", "text2"])
 
 			expect(result.embeddings).toHaveLength(2)
-			expect(result.embeddings[0]).toEqual([0.1, 0.2])
-			expect(result.embeddings[1]).toEqual([0.3, 0.4])
+			expect(result.embeddings[0]).toEqual([0.25, 0.5])
+			expect(result.embeddings[1]).toEqual([0.75, 1.0])
 		})
 
 		it("should use custom model when provided", async () => {
 			const customModel = "mistralai/mistral-embed-2312"
 			const embedderWithCustomModel = new OpenRouterEmbedder(mockApiKey, customModel)
 
+			const testEmbedding = new Float32Array([0.25, 0.5])
+			const base64String = Buffer.from(testEmbedding.buffer).toString("base64")
+
 			const mockResponse = {
-				ok: true,
-				json: vi.fn().mockResolvedValue({
-					data: [
-						{
-							embedding: Buffer.from(new Float32Array([0.1, 0.2]).buffer).toString("base64"),
-						},
-					],
-					usage: {
-						prompt_tokens: 5,
-						total_tokens: 5,
+				data: [
+					{
+						embedding: base64String,
 					},
-				}),
+				],
+				usage: {
+					prompt_tokens: 5,
+					total_tokens: 5,
+				},
 			}
 
-			mockFetch.mockResolvedValue(mockResponse)
+			mockEmbeddingsCreate.mockResolvedValue(mockResponse)
 
 			await embedderWithCustomModel.createEmbeddings(["test"])
 
-			// Verify the fetch was called with the custom model
-			expect(mockFetch).toHaveBeenCalledWith(
-				expect.stringContaining("openrouter.ai/api/v1/embeddings"),
-				expect.objectContaining({
-					body: expect.stringContaining(`"model":"${customModel}"`),
-				}),
-			)
+			// Verify the embeddings.create was called with the custom model
+			expect(mockEmbeddingsCreate).toHaveBeenCalledWith({
+				input: ["test"],
+				model: customModel,
+				encoding_format: "base64",
+			})
 		})
 	})
 
@@ -141,42 +199,47 @@ describe("OpenRouterEmbedder", () => {
 
 		beforeEach(() => {
 			embedder = new OpenRouterEmbedder(mockApiKey)
-			mockFetch.mockClear()
 		})
 
 		it("should validate configuration successfully", async () => {
+			const testEmbedding = new Float32Array([0.25, 0.5])
+			const base64String = Buffer.from(testEmbedding.buffer).toString("base64")
+
 			const mockResponse = {
-				ok: true,
-				json: vi.fn().mockResolvedValue({
-					data: [
-						{
-							embedding: Buffer.from(new Float32Array([0.1, 0.2]).buffer).toString("base64"),
-						},
-					],
-				}),
+				data: [
+					{
+						embedding: base64String,
+					},
+				],
+				usage: {
+					prompt_tokens: 1,
+					total_tokens: 1,
+				},
 			}
 
-			mockFetch.mockResolvedValue(mockResponse)
+			mockEmbeddingsCreate.mockResolvedValue(mockResponse)
 
 			const result = await embedder.validateConfiguration()
 
 			expect(result.valid).toBe(true)
 			expect(result.error).toBeUndefined()
+			expect(mockEmbeddingsCreate).toHaveBeenCalledWith({
+				input: ["test"],
+				model: "openai/text-embedding-3-large",
+				encoding_format: "base64",
+			})
 		})
 
 		it("should handle validation failure", async () => {
-			const mockResponse = {
-				ok: false,
-				status: 401,
-				text: vi.fn().mockResolvedValue("Unauthorized"),
-			}
+			const authError = new Error("Invalid API key")
+			;(authError as any).status = 401
 
-			mockFetch.mockResolvedValue(mockResponse)
+			mockEmbeddingsCreate.mockRejectedValue(authError)
 
 			const result = await embedder.validateConfiguration()
 
 			expect(result.valid).toBe(false)
-			expect(result.error).toBeDefined()
+			expect(result.error).toBe("embeddings:validation.authenticationFailed")
 		})
 	})
 
