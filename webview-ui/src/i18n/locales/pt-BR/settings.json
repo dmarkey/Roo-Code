@@ -28,10 +28,15 @@
 		"notifications": "Notificações",
 		"contextManagement": "Contexto",
 		"terminal": "Terminal",
+		"slashCommands": "Comandos de Barra",
 		"prompts": "Prompts",
+		"ui": "UI",
 		"experimental": "Experimental",
 		"language": "Idioma",
 		"about": "Sobre"
+	},
+	"slashCommands": {
+		"description": "Gerencie seus comandos de barra para executar rapidamente fluxos de trabalho e ações personalizadas. <DocsLink>Saiba mais</DocsLink>"
 	},
 	"prompts": {
 		"description": "Configure prompts de suporte usados para ações rápidas como melhorar prompts, explicar código e corrigir problemas. Esses prompts ajudam o Roo a fornecer melhor assistência para tarefas comuns de desenvolvimento."
@@ -47,6 +52,9 @@
 		"geminiProvider": "Gemini",
 		"geminiApiKeyLabel": "Chave de API:",
 		"geminiApiKeyPlaceholder": "Digite sua chave de API do Gemini",
+		"vercelAiGatewayProvider": "Vercel AI Gateway",
+		"vercelAiGatewayApiKeyLabel": "Chave de API",
+		"vercelAiGatewayApiKeyPlaceholder": "Digite sua chave de API do Vercel AI Gateway",
 		"mistralProvider": "Mistral",
 		"mistralApiKeyLabel": "Chave de API:",
 		"mistralApiKeyPlaceholder": "Digite sua chave de API da Mistral",
@@ -113,6 +121,7 @@
 			"modelDimensionRequired": "A dimensão do modelo é obrigatória",
 			"geminiApiKeyRequired": "A chave de API do Gemini é obrigatória",
 			"mistralApiKeyRequired": "A chave de API Mistral é obrigatória",
+			"vercelAiGatewayApiKeyRequired": "A chave de API do Vercel AI Gateway é obrigatória",
 			"ollamaBaseUrlRequired": "A URL base do Ollama é obrigatória",
 			"baseUrlRequired": "A URL base é obrigatória",
 			"modelDimensionMinValue": "A dimensão do modelo deve ser maior que 0"
@@ -126,6 +135,7 @@
 		"resetToDefault": "Redefinir para o padrão"
 	},
 	"autoApprove": {
+		"toggleShortcut": "Você pode configurar um atalho global para esta configuração <SettingsLink>nas preferências do seu IDE</SettingsLink>.",
 		"description": "Permitir que o Roo realize operações automaticamente sem exigir aprovação. Ative essas configurações apenas se confiar totalmente na IA e compreender os riscos de segurança associados.",
 		"enabled": "Aprovação automática habilitada",
 		"toggleAriaLabel": "Alternar aprovação automática",
@@ -233,6 +243,8 @@
 		"awsCustomArnDesc": "Certifique-se de que a região no ARN corresponde à região AWS selecionada acima.",
 		"openRouterApiKey": "Chave de API OpenRouter",
 		"getOpenRouterApiKey": "Obter chave de API OpenRouter",
+		"vercelAiGatewayApiKey": "Chave API do Vercel AI Gateway",
+		"getVercelAiGatewayApiKey": "Obter chave API do Vercel AI Gateway",
 		"apiKeyStorageNotice": "As chaves de API são armazenadas com segurança no Armazenamento Secreto do VSCode",
 		"glamaApiKey": "Chave de API Glama",
 		"getGlamaApiKey": "Obter chave de API Glama",
@@ -285,6 +297,9 @@
 		"getZaiApiKey": "Obter chave de API Z AI",
 		"zaiEntrypoint": "Ponto de entrada Z AI",
 		"zaiEntrypointDescription": "Selecione o ponto de entrada da API apropriado com base na sua localização. Se você estiver na China, escolha open.bigmodel.cn. Caso contrário, escolha api.z.ai.",
+		"minimaxApiKey": "Chave de API MiniMax",
+		"getMiniMaxApiKey": "Obter chave de API MiniMax",
+		"minimaxBaseUrl": "Ponto de entrada MiniMax",
 		"geminiApiKey": "Chave de API Gemini",
 		"getGroqApiKey": "Obter chave de API Groq",
 		"groqApiKey": "Chave de API Groq",
@@ -334,7 +349,7 @@
 		"enablePromptCachingTitle": "Ativar cache de prompts para melhorar o desempenho e reduzir custos para modelos suportados.",
 		"cacheUsageNote": "Nota: Se você não vir o uso do cache, tente selecionar um modelo diferente e depois selecionar novamente o modelo desejado.",
 		"vscodeLmModel": "Modelo de Linguagem",
-		"vscodeLmWarning": "Nota: Esta é uma integração muito experimental e o suporte do provedor pode variar. Se você receber um erro sobre um modelo não ser suportado, isso é um problema do lado do provedor.",
+		"vscodeLmWarning": "Observação: Modelos acessados pela VS Code Language Model API podem ser encapsulados ou ajustados pelo provedor, portanto o comportamento pode diferir do uso direto do mesmo modelo em um provedor ou roteador típico. Para usar um modelo no menu suspenso «Language Model», primeiro altere para esse modelo e depois clique em «Aceitar» no prompt do Copilot Chat; caso contrário, você pode ver um erro como 400 «The requested model is not supported».",
 		"geminiParameters": {
 			"urlContext": {
 				"title": "Ativar contexto de URL",
@@ -368,6 +383,10 @@
 		"ollama": {
 			"baseUrl": "URL Base (opcional)",
 			"modelId": "ID do Modelo",
+			"apiKey": "Chave API Ollama",
+			"apiKeyHelp": "Chave API opcional para instâncias Ollama autenticadas ou serviços em nuvem. Deixe vazio para instalações locais.",
+			"numCtx": "Tamanho da janela de contexto (num_ctx)",
+			"numCtxHelp": "Substitui o tamanho da janela de contexto padrão do modelo. Deixe em branco para usar a configuração do Modelfile do modelo. O valor mínimo é 128.",
 			"description": "O Ollama permite que você execute modelos localmente em seu computador. Para instruções sobre como começar, veja o guia de início rápido deles.",
 			"warning": "Nota: O Roo Code usa prompts complexos e funciona melhor com modelos Claude. Modelos menos capazes podem não funcionar como esperado."
 		},
@@ -406,7 +425,7 @@
 			},
 			"computerUse": {
 				"label": "Uso do Computador",
-				"description": "Este modelo é capaz de interagir com um navegador? (ex. Claude 3.7 Sonnet)."
+				"description": "Este modelo é capaz de interagir com um navegador?"
 			},
 			"promptCache": {
 				"label": "Cache de Prompts",
@@ -444,6 +463,7 @@
 		},
 		"reasoningEffort": {
 			"label": "Esforço de raciocínio do modelo",
+			"none": "Nenhum",
 			"minimal": "Mínimo (mais rápido)",
 			"high": "Alto",
 			"medium": "Médio",
@@ -494,6 +514,10 @@
 		}
 	},
 	"checkpoints": {
+		"timeout": {
+			"label": "Tempo limite para inicialização do checkpoint (segundos)",
+			"description": "Tempo máximo de espera para inicializar o serviço de checkpoint. Padrão: 15 segundos. Faixa: 10-60 segundos."
+		},
 		"enable": {
 			"label": "Ativar pontos de verificação automáticos",
 			"description": "Quando ativado, o Roo criará automaticamente pontos de verificação durante a execução de tarefas, facilitando a revisão de alterações ou o retorno a estados anteriores. <0>Saiba mais</0>"
@@ -590,6 +614,14 @@
 			"label": "Tamanho total máximo da imagem",
 			"mb": "MB",
 			"description": "Limite máximo de tamanho cumulativo (em MB) para todas as imagens processadas em uma única operação read_file. Ao ler várias imagens, o tamanho de cada imagem é adicionado ao total. Se incluir outra imagem exceder esse limite, ela será ignorada."
+		},
+		"includeCurrentTime": {
+			"label": "Incluir hora atual no contexto",
+			"description": "Quando ativado, a hora atual e as informações de fuso horário serão incluídas no prompt do sistema. Desative se os modelos pararem de funcionar por problemas de tempo."
+		},
+		"includeCurrentCost": {
+			"label": "Incluir custo atual no contexto",
+			"description": "Quando ativado, o custo de uso atual da API será incluído no prompt do sistema. Desative se os modelos pararem de funcionar por problemas de custo."
 		}
 	},
 	"terminal": {
@@ -656,7 +688,7 @@
 	"advanced": {
 		"diff": {
 			"label": "Ativar edição através de diffs",
-			"description": "Quando ativado, o Roo poderá editar arquivos mais rapidamente e rejeitará automaticamente escritas completas de arquivos truncados. Funciona melhor com o modelo mais recente Claude 3.7 Sonnet.",
+			"description": "Quando ativado, o Roo poderá editar arquivos mais rapidamente e rejeitará automaticamente escritas completas de arquivos truncados",
 			"strategy": {
 				"label": "Estratégia de diff",
 				"options": {
@@ -684,10 +716,6 @@
 		"DIFF_STRATEGY_UNIFIED": {
 			"name": "Usar estratégia diff unificada experimental",
 			"description": "Ativar a estratégia diff unificada experimental. Esta estratégia pode reduzir o número de novas tentativas causadas por erros do modelo, mas pode causar comportamento inesperado ou edições incorretas. Ative apenas se compreender os riscos e estiver disposto a revisar cuidadosamente todas as alterações."
-		},
-		"SEARCH_AND_REPLACE": {
-			"name": "Usar ferramenta de busca e substituição experimental",
-			"description": "Ativar a ferramenta de busca e substituição experimental, permitindo que o Roo substitua várias instâncias de um termo de busca em uma única solicitação."
 		},
 		"INSERT_BLOCK": {
 			"name": "Usar ferramenta de inserção de conteúdo experimental",
@@ -724,6 +752,21 @@
 		"NEW_TASK_REQUIRE_TODOS": {
 			"name": "Exigir lista de 'todos' para novas tarefas",
 			"description": "Quando ativado, a ferramenta new_task exigirá que um parâmetro todos seja fornecido. Isso garante que todas as novas tarefas comecem com uma lista clara de objetivos. Quando desativado (padrão), o parâmetro todos permanece opcional para compatibilidade com versões anteriores."
+		},
+		"IMAGE_GENERATION": {
+			"name": "Habilitar geração de imagens com IA",
+			"description": "Quando habilitado, Roo pode gerar imagens a partir de prompts de texto usando os modelos de geração de imagens do OpenRouter. Requer uma chave de API do OpenRouter configurada.",
+			"openRouterApiKeyLabel": "Chave de API do OpenRouter",
+			"openRouterApiKeyPlaceholder": "Digite sua chave de API do OpenRouter",
+			"getApiKeyText": "Obtenha sua chave de API de",
+			"modelSelectionLabel": "Modelo de Geração de Imagens",
+			"modelSelectionDescription": "Selecione o modelo para geração de imagens",
+			"warningMissingKey": "⚠️ A chave de API do OpenRouter é necessária para geração de imagens. Configure-a acima.",
+			"successConfigured": "✓ A geração de imagens está configurada e pronta para uso"
+		},
+		"RUN_SLASH_COMMAND": {
+			"name": "Ativar comandos slash iniciados pelo modelo",
+			"description": "Quando ativado, Roo pode executar seus comandos slash para executar fluxos de trabalho."
 		}
 	},
 	"promptCaching": {
@@ -738,8 +781,6 @@
 	"modelInfo": {
 		"supportsImages": "Suporta imagens",
 		"noImages": "Não suporta imagens",
-		"supportsComputerUse": "Suporta uso do computador",
-		"noComputerUse": "Não suporta uso do computador",
 		"supportsPromptCache": "Suporta cache de prompts",
 		"noPromptCache": "Não suporta cache de prompts",
 		"contextWindow": "Janela de Contexto:",
@@ -770,7 +811,7 @@
 		"feedback": "Se tiver alguma dúvida ou feedback, sinta-se à vontade para abrir um problema em <githubLink>github.com/RooCodeInc/Roo-Code</githubLink> ou juntar-se a <redditLink>reddit.com/r/RooCode</redditLink> ou <discordLink>discord.gg/roocode</discordLink>",
 		"telemetry": {
 			"label": "Permitir relatórios anônimos de erros e uso",
-			"description": "Ajude a melhorar o Roo Code enviando dados de uso anônimos e relatórios de erros. Nunca são enviados código, prompts ou informações pessoais. Consulte nossa política de privacidade para mais detalhes."
+			"description": "Ajude a melhorar o Roo Code enviando dados de uso anônimos e relatórios de erros. Esta telemetria não coleta código, prompts ou informações pessoais. Consulte nossa <privacyLink>política de privacidade</privacyLink> para mais detalhes."
 		},
 		"settings": {
 			"import": "Importar",
@@ -794,6 +835,7 @@
 			"regionMismatch": "Aviso: A região em seu ARN ({{arnRegion}}) não corresponde à região selecionada ({{region}}). Isso pode causar problemas de acesso. O provedor usará a região do ARN."
 		},
 		"modelAvailability": "O ID do modelo ({{modelId}}) que você forneceu não está disponível. Por favor, escolha outro modelo.",
+		"modelDeprecated": "Este modelo não está mais disponível. Por favor, selecione um modelo diferente.",
 		"providerNotAllowed": "O provedor '{{provider}}' não é permitido pela sua organização",
 		"modelNotAllowed": "O modelo '{{model}}' não é permitido para o provedor '{{provider}}' pela sua organização",
 		"profileInvalid": "Este perfil contém um provedor ou modelo que não é permitido pela sua organização",
@@ -836,5 +878,25 @@
 	"includeMaxOutputTokensDescription": "Enviar parâmetro de tokens máximos de saída nas solicitações de API. Alguns provedores podem não suportar isso.",
 	"limitMaxTokensDescription": "Limitar o número máximo de tokens na resposta",
 	"maxOutputTokensLabel": "Tokens máximos de saída",
-	"maxTokensGenerateDescription": "Tokens máximos para gerar na resposta"
+	"maxTokensGenerateDescription": "Tokens máximos para gerar na resposta",
+	"serviceTier": {
+		"label": "Nível de serviço",
+		"tooltip": "Para um processamento mais rápido das solicitações de API, experimente o nível de serviço de processamento prioritário. Para preços mais baixos com maior latência, experimente o nível de processamento flexível.",
+		"standard": "Padrão",
+		"flex": "Flexível",
+		"priority": "Prioritário",
+		"pricingTableTitle": "Preços por nível de serviço (preço por 1 milhão de tokens)",
+		"columns": {
+			"tier": "Nível",
+			"input": "Entrada",
+			"output": "Saída",
+			"cacheReads": "Leituras de cache"
+		}
+	},
+	"ui": {
+		"collapseThinking": {
+			"label": "Recolher mensagens de pensamento por padrão",
+			"description": "Quando ativado, os blocos de pensamento serão recolhidos por padrão até que você interaja com eles"
+		}
+	}
 }

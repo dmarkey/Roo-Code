@@ -7,9 +7,12 @@ import {
 	type ModeConfig,
 	type ExperimentId,
 	type TodoItem,
+	type TelemetrySetting,
+	type OrganizationAllowList,
+	type CloudOrganizationMembership,
+	ORGANIZATION_ALLOW_ALL,
+	DEFAULT_CHECKPOINT_TIMEOUT_SECONDS,
 } from "@roo-code/types"
-
-import { type OrganizationAllowList, ORGANIZATION_ALLOW_ALL } from "@roo/cloud"
 
 import { ExtensionMessage, ExtensionState, MarketplaceInstalledMetadata, Command } from "@roo/ExtensionMessage"
 import { findLastIndex } from "@roo/array"
@@ -18,7 +21,6 @@ import { checkExistKey } from "@roo/checkExistApiConfig"
 import { Mode, defaultModeSlug, defaultPrompts } from "@roo/modes"
 import { CustomSupportPrompts } from "@roo/support-prompt"
 import { experimentDefault } from "@roo/experiments"
-import { TelemetrySetting } from "@roo/TelemetrySetting"
 import { RouterModels } from "@roo/api"
 
 import { vscode } from "@src/utils/vscode"
@@ -39,6 +41,7 @@ export interface ExtensionStateContextType extends ExtensionState {
 	organizationAllowList: OrganizationAllowList
 	organizationSettingsVersion: number
 	cloudIsAuthenticated: boolean
+	cloudOrganizations?: CloudOrganizationMembership[]
 	sharingEnabled: boolean
 	maxConcurrentFileReads?: number
 	mdmCompliant?: boolean
@@ -86,6 +89,8 @@ export interface ExtensionStateContextType extends ExtensionState {
 	setTtsSpeed: (value: number) => void
 	setDiffEnabled: (value: boolean) => void
 	setEnableCheckpoints: (value: boolean) => void
+	checkpointTimeout: number
+	setCheckpointTimeout: (value: number) => void
 	setBrowserViewportSize: (value: string) => void
 	setFuzzyMatchThreshold: (value: number) => void
 	setWriteDelayMs: (value: number) => void
@@ -101,6 +106,10 @@ export interface ExtensionStateContextType extends ExtensionState {
 	setEnableMcpServerCreation: (value: boolean) => void
 	remoteControlEnabled: boolean
 	setRemoteControlEnabled: (value: boolean) => void
+	taskSyncEnabled: boolean
+	setTaskSyncEnabled: (value: boolean) => void
+	featureRoomoteControlEnabled: boolean
+	setFeatureRoomoteControlEnabled: (value: boolean) => void
 	alwaysApproveResubmit?: boolean
 	setAlwaysApproveResubmit: (value: boolean) => void
 	requestDelaySeconds: number
@@ -138,6 +147,7 @@ export interface ExtensionStateContextType extends ExtensionState {
 	terminalCompressProgressBar?: boolean
 	setTerminalCompressProgressBar: (value: boolean) => void
 	setHistoryPreviewCollapsed: (value: boolean) => void
+	setReasoningBlockCollapsed: (value: boolean) => void
 	autoCondenseContext: boolean
 	setAutoCondenseContext: (value: boolean) => void
 	autoCondenseContextPercent: number
@@ -151,6 +161,10 @@ export interface ExtensionStateContextType extends ExtensionState {
 	setMaxDiagnosticMessages: (value: number) => void
 	includeTaskHistoryInEnhance?: boolean
 	setIncludeTaskHistoryInEnhance: (value: boolean) => void
+	includeCurrentTime?: boolean
+	setIncludeCurrentTime: (value: boolean) => void
+	includeCurrentCost?: boolean
+	setIncludeCurrentCost: (value: boolean) => void
 }
 
 export const ExtensionStateContext = createContext<ExtensionStateContextType | undefined>(undefined)
@@ -176,7 +190,8 @@ export const mergeExtensionState = (prevState: ExtensionState, newState: Extensi
 }
 
 export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-	const [state, setState] = useState<ExtensionState & { organizationAllowList?: OrganizationAllowList }>({
+	const [state, setState] = useState<ExtensionState>({
+		apiConfiguration: {},
 		version: "",
 		clineMessages: [],
 		taskHistory: [],
@@ -189,6 +204,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		ttsSpeed: 1.0,
 		diffEnabled: false,
 		enableCheckpoints: true,
+		checkpointTimeout: DEFAULT_CHECKPOINT_TIMEOUT_SECONDS, // Default to 15 seconds
 		fuzzyMatchThreshold: 1.0,
 		language: "en", // Default language code
 		writeDelayMs: 1000,
@@ -200,6 +216,8 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		mcpEnabled: true,
 		enableMcpServerCreation: false,
 		remoteControlEnabled: false,
+		taskSyncEnabled: false,
+		featureRoomoteControlEnabled: false,
 		alwaysApproveResubmit: false,
 		requestDelaySeconds: 5,
 		currentApiConfigName: "default",
@@ -231,8 +249,10 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		terminalZdotdir: false, // Default ZDOTDIR handling setting
 		terminalCompressProgressBar: true, // Default to compress progress bar output
 		historyPreviewCollapsed: false, // Initialize the new state (default to expanded)
+		reasoningBlockCollapsed: true, // Default to collapsed
 		cloudUserInfo: null,
 		cloudIsAuthenticated: false,
+		cloudOrganizations: [],
 		sharingEnabled: false,
 		organizationAllowList: ORGANIZATION_ALLOW_ALL,
 		organizationSettingsVersion: -1,
@@ -252,6 +272,10 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		alwaysAllowUpdateTodoList: true,
 		includeDiagnosticMessages: true,
 		maxDiagnosticMessages: 50,
+		openRouterImageApiKey: "",
+		openRouterImageGenerationSelectedModel: "",
+		includeCurrentTime: true,
+		includeCurrentCost: true,
 	})
 
 	const [didHydrateState, setDidHydrateState] = useState(false)
@@ -271,6 +295,9 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		global: {},
 	})
 	const [includeTaskHistoryInEnhance, setIncludeTaskHistoryInEnhance] = useState(true)
+	const [prevCloudIsAuthenticated, setPrevCloudIsAuthenticated] = useState(false)
+	const [includeCurrentTime, setIncludeCurrentTime] = useState(true)
+	const [includeCurrentCost, setIncludeCurrentCost] = useState(true)
 
 	const setListApiConfigMeta = useCallback(
 		(value: ProviderSettingsEntry[]) => setState((prevState) => ({ ...prevState, listApiConfigMeta: value })),
@@ -308,12 +335,32 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 					if ((newState as any).includeTaskHistoryInEnhance !== undefined) {
 						setIncludeTaskHistoryInEnhance((newState as any).includeTaskHistoryInEnhance)
 					}
+					// Update includeCurrentTime if present in state message
+					if ((newState as any).includeCurrentTime !== undefined) {
+						setIncludeCurrentTime((newState as any).includeCurrentTime)
+					}
+					// Update includeCurrentCost if present in state message
+					if ((newState as any).includeCurrentCost !== undefined) {
+						setIncludeCurrentCost((newState as any).includeCurrentCost)
+					}
 					// Handle marketplace data if present in state message
 					if (newState.marketplaceItems !== undefined) {
 						setMarketplaceItems(newState.marketplaceItems)
 					}
 					if (newState.marketplaceInstalledMetadata !== undefined) {
 						setMarketplaceInstalledMetadata(newState.marketplaceInstalledMetadata)
+					}
+					break
+				}
+				case "action": {
+					if (message.action === "toggleAutoApprove") {
+						// Toggle the auto-approval state
+						setState((prevState) => {
+							const newValue = !(prevState.autoApprovalEnabled ?? false)
+							// Also send the update to the extension
+							vscode.postMessage({ type: "autoApprovalEnabled", bool: newValue })
+							return { ...prevState, autoApprovalEnabled: newValue }
+						})
 					}
 					break
 				}
@@ -390,8 +437,20 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		vscode.postMessage({ type: "webviewDidLaunch" })
 	}, [])
 
+	// Watch for authentication state changes and refresh Roo models
+	useEffect(() => {
+		const currentAuth = state.cloudIsAuthenticated ?? false
+		const currentProvider = state.apiConfiguration?.apiProvider
+		if (!prevCloudIsAuthenticated && currentAuth && currentProvider === "roo") {
+			// User just authenticated and Roo is the active provider - refresh Roo models
+			vscode.postMessage({ type: "requestRooModels" })
+		}
+		setPrevCloudIsAuthenticated(currentAuth)
+	}, [state.cloudIsAuthenticated, prevCloudIsAuthenticated, state.apiConfiguration?.apiProvider])
+
 	const contextValue: ExtensionStateContextType = {
 		...state,
+		reasoningBlockCollapsed: state.reasoningBlockCollapsed ?? true,
 		didHydrateState,
 		showWelcome,
 		theme,
@@ -407,6 +466,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		screenshotQuality: state.screenshotQuality,
 		routerModels: extensionRouterModels,
 		cloudIsAuthenticated: state.cloudIsAuthenticated ?? false,
+		cloudOrganizations: state.cloudOrganizations ?? [],
 		organizationSettingsVersion: state.organizationSettingsVersion ?? -1,
 		marketplaceItems,
 		marketplaceInstalledMetadata,
@@ -414,6 +474,8 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		alwaysAllowFollowupQuestions,
 		followupAutoApproveTimeoutMs,
 		remoteControlEnabled: state.remoteControlEnabled ?? false,
+		taskSyncEnabled: state.taskSyncEnabled,
+		featureRoomoteControlEnabled: state.featureRoomoteControlEnabled ?? false,
 		setExperimentEnabled: (id, enabled) =>
 			setState((prevState) => ({ ...prevState, experiments: { ...prevState.experiments, [id]: enabled } })),
 		setApiConfiguration,
@@ -443,6 +505,7 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		setTtsSpeed: (value) => setState((prevState) => ({ ...prevState, ttsSpeed: value })),
 		setDiffEnabled: (value) => setState((prevState) => ({ ...prevState, diffEnabled: value })),
 		setEnableCheckpoints: (value) => setState((prevState) => ({ ...prevState, enableCheckpoints: value })),
+		setCheckpointTimeout: (value) => setState((prevState) => ({ ...prevState, checkpointTimeout: value })),
 		setBrowserViewportSize: (value: string) =>
 			setState((prevState) => ({ ...prevState, browserViewportSize: value })),
 		setFuzzyMatchThreshold: (value) => setState((prevState) => ({ ...prevState, fuzzyMatchThreshold: value })),
@@ -461,6 +524,9 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		setEnableMcpServerCreation: (value) =>
 			setState((prevState) => ({ ...prevState, enableMcpServerCreation: value })),
 		setRemoteControlEnabled: (value) => setState((prevState) => ({ ...prevState, remoteControlEnabled: value })),
+		setTaskSyncEnabled: (value) => setState((prevState) => ({ ...prevState, taskSyncEnabled: value }) as any),
+		setFeatureRoomoteControlEnabled: (value) =>
+			setState((prevState) => ({ ...prevState, featureRoomoteControlEnabled: value })),
 		setAlwaysApproveResubmit: (value) => setState((prevState) => ({ ...prevState, alwaysApproveResubmit: value })),
 		setRequestDelaySeconds: (value) => setState((prevState) => ({ ...prevState, requestDelaySeconds: value })),
 		setCurrentApiConfigName: (value) => setState((prevState) => ({ ...prevState, currentApiConfigName: value })),
@@ -502,6 +568,8 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 			}),
 		setHistoryPreviewCollapsed: (value) =>
 			setState((prevState) => ({ ...prevState, historyPreviewCollapsed: value })),
+		setReasoningBlockCollapsed: (value) =>
+			setState((prevState) => ({ ...prevState, reasoningBlockCollapsed: value })),
 		setHasOpenedModeSelector: (value) => setState((prevState) => ({ ...prevState, hasOpenedModeSelector: value })),
 		setAutoCondenseContext: (value) => setState((prevState) => ({ ...prevState, autoCondenseContext: value })),
 		setAutoCondenseContextPercent: (value) =>
@@ -524,6 +592,10 @@ export const ExtensionStateContextProvider: React.FC<{ children: React.ReactNode
 		},
 		includeTaskHistoryInEnhance,
 		setIncludeTaskHistoryInEnhance,
+		includeCurrentTime,
+		setIncludeCurrentTime,
+		includeCurrentCost,
+		setIncludeCurrentCost,
 	}
 
 	return <ExtensionStateContext.Provider value={contextValue}>{children}</ExtensionStateContext.Provider>

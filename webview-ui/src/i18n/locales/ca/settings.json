@@ -28,10 +28,15 @@
 		"notifications": "Notificacions",
 		"contextManagement": "Context",
 		"terminal": "Terminal",
+		"slashCommands": "Comandes de barra",
 		"prompts": "Indicacions",
+		"ui": "UI",
 		"experimental": "Experimental",
 		"language": "Idioma",
 		"about": "Sobre Roo Code"
+	},
+	"slashCommands": {
+		"description": "Gestiona les teves comandes de barra per executar ràpidament fluxos de treball i accions personalitzades. <DocsLink>Aprèn-ne més</DocsLink>"
 	},
 	"prompts": {
 		"description": "Configura les indicacions de suport utilitzades per a accions ràpides com millorar indicacions, explicar codi i solucionar problemes. Aquestes indicacions ajuden Roo a proporcionar millor assistència per a tasques comunes de desenvolupament."
@@ -50,6 +55,9 @@
 		"mistralProvider": "Mistral",
 		"mistralApiKeyLabel": "Clau de l'API:",
 		"mistralApiKeyPlaceholder": "Introduïu la vostra clau de l'API de Mistral",
+		"vercelAiGatewayProvider": "Vercel AI Gateway",
+		"vercelAiGatewayApiKeyLabel": "Clau API",
+		"vercelAiGatewayApiKeyPlaceholder": "Introduïu la vostra clau API de Vercel AI Gateway",
 		"openaiCompatibleProvider": "Compatible amb OpenAI",
 		"openAiKeyLabel": "Clau API OpenAI",
 		"openAiKeyPlaceholder": "Introduïu la vostra clau API OpenAI",
@@ -113,6 +121,7 @@
 			"modelDimensionRequired": "Cal una dimensió de model",
 			"geminiApiKeyRequired": "Cal una clau d'API de Gemini",
 			"mistralApiKeyRequired": "La clau de l'API de Mistral és requerida",
+			"vercelAiGatewayApiKeyRequired": "Es requereix la clau API de Vercel AI Gateway",
 			"ollamaBaseUrlRequired": "Cal una URL base d'Ollama",
 			"baseUrlRequired": "Cal una URL base",
 			"modelDimensionMinValue": "La dimensió del model ha de ser superior a 0"
@@ -126,6 +135,7 @@
 		"resetToDefault": "Restablir al valor per defecte"
 	},
 	"autoApprove": {
+		"toggleShortcut": "Pots configurar una drecera global per a aquesta configuració <SettingsLink>a les preferències del teu IDE</SettingsLink>.",
 		"description": "Permet que Roo realitzi operacions automàticament sense requerir aprovació. Activeu aquesta configuració només si confieu plenament en la IA i enteneu els riscos de seguretat associats.",
 		"enabled": "Auto-aprovació activada",
 		"toggleAriaLabel": "Commuta l'aprovació automàtica",
@@ -233,6 +243,8 @@
 		"awsCustomArnDesc": "Assegureu-vos que la regió a l'ARN coincideix amb la regió d'AWS seleccionada anteriorment.",
 		"openRouterApiKey": "Clau API d'OpenRouter",
 		"getOpenRouterApiKey": "Obtenir clau API d'OpenRouter",
+		"vercelAiGatewayApiKey": "Clau API de Vercel AI Gateway",
+		"getVercelAiGatewayApiKey": "Obtenir clau API de Vercel AI Gateway",
 		"apiKeyStorageNotice": "Les claus API s'emmagatzemen de forma segura a l'Emmagatzematge Secret de VSCode",
 		"glamaApiKey": "Clau API de Glama",
 		"getGlamaApiKey": "Obtenir clau API de Glama",
@@ -285,6 +297,9 @@
 		"getZaiApiKey": "Obtenir clau API de Z AI",
 		"zaiEntrypoint": "Punt d'entrada de Z AI",
 		"zaiEntrypointDescription": "Si us plau, seleccioneu el punt d'entrada de l'API apropiat segons la vostra ubicació. Si sou a la Xina, trieu open.bigmodel.cn. Altrament, trieu api.z.ai.",
+		"minimaxApiKey": "Clau API de MiniMax",
+		"getMiniMaxApiKey": "Obtenir clau API de MiniMax",
+		"minimaxBaseUrl": "Punt d'entrada de MiniMax",
 		"geminiApiKey": "Clau API de Gemini",
 		"getGroqApiKey": "Obtenir clau API de Groq",
 		"groqApiKey": "Clau API de Groq",
@@ -334,7 +349,7 @@
 		"enablePromptCachingTitle": "Habilitar l'emmagatzematge en caché de prompts per millorar el rendiment i reduir els costos per als models compatibles.",
 		"cacheUsageNote": "Nota: Si no veieu l'ús de la caché, proveu de seleccionar un model diferent i després tornar a seleccionar el model desitjat.",
 		"vscodeLmModel": "Model de llenguatge",
-		"vscodeLmWarning": "Nota: Aquesta és una integració molt experimental i el suport del proveïdor variarà. Si rebeu un error sobre un model no compatible, és un problema del proveïdor.",
+		"vscodeLmWarning": "Nota: Els models accessibles a través de l’API VS Code Language Model poden estar encapsulats o ajustats pel proveïdor; per tant, el comportament pot diferir de l’ús directe del mateix model des d’un proveïdor o enrutador típic. Per utilitzar un model del desplegable «Language Model», primer canvia a aquest model i després fes clic a «Acceptar» a l’avís de Copilot Chat; en cas contrari pots veure un error com 400 «The requested model is not supported».",
 		"geminiParameters": {
 			"urlContext": {
 				"title": "Activa el context d'URL",
@@ -368,6 +383,10 @@
 		"ollama": {
 			"baseUrl": "URL base (opcional)",
 			"modelId": "ID del model",
+			"apiKey": "Clau API d'Ollama",
+			"apiKeyHelp": "Clau API opcional per a instàncies d'Ollama autenticades o serveis al núvol. Deixa-ho buit per a instal·lacions locals.",
+			"numCtx": "Mida de la finestra de context (num_ctx)",
+			"numCtxHelp": "Sobreescriu la mida de la finestra de context per defecte del model. Deixeu-ho en blanc per utilitzar la configuració del Modelfile del model. El valor mínim és 128.",
 			"description": "Ollama permet executar models localment al vostre ordinador. Per a instruccions sobre com començar, consulteu la Guia d'inici ràpid.",
 			"warning": "Nota: Roo Code utilitza prompts complexos i funciona millor amb models Claude. Els models menys capaços poden no funcionar com s'espera."
 		},
@@ -406,7 +425,7 @@
 			},
 			"computerUse": {
 				"label": "Ús de l'ordinador",
-				"description": "Aquest model és capaç d'interactuar amb un navegador? (com Claude 3.7 Sonnet)"
+				"description": "Aquest model és capaç d'interactuar amb un navegador?"
 			},
 			"promptCache": {
 				"label": "Emmagatzematge en caché de prompts",
@@ -444,6 +463,7 @@
 		},
 		"reasoningEffort": {
 			"label": "Esforç de raonament del model",
+			"none": "Cap",
 			"minimal": "Mínim (el més ràpid)",
 			"high": "Alt",
 			"medium": "Mitjà",
@@ -494,6 +514,10 @@
 		}
 	},
 	"checkpoints": {
+		"timeout": {
+			"label": "Temps d'espera per inicialitzar el punt de control (segons)",
+			"description": "Temps màxim d'espera per inicialitzar el servei de punts de control. El valor per defecte és 15 segons. Rang: 10-60 segons."
+		},
 		"enable": {
 			"label": "Habilitar punts de control automàtics",
 			"description": "Quan està habilitat, Roo crearà automàticament punts de control durant l'execució de tasques, facilitant la revisió de canvis o la reversió a estats anteriors. <0>Més informació</0>"
@@ -589,6 +613,14 @@
 			"label": "Mida total màxima d'imatges",
 			"mb": "MB",
 			"description": "Límit de mida acumulativa màxima (en MB) per a totes les imatges processades en una sola operació read_file. Quan es llegeixen múltiples imatges, la mida de cada imatge s'afegeix al total. Si incloure una altra imatge excediria aquest límit, serà omesa."
+		},
+		"includeCurrentTime": {
+			"label": "Inclou l'hora actual en el context",
+			"description": "Quan està activat, l'hora actual i la informació del fus horari s'inclouran a la indicació del sistema. Desactiveu-ho si els models deixen de funcionar per problemes amb l'hora."
+		},
+		"includeCurrentCost": {
+			"label": "Inclou el cost actual en el context",
+			"description": "Quan està activat, el cost d'ús actual de l'API s'inclourà a la indicació del sistema. Desactiveu-ho si els models deixen de funcionar per problemes amb el cost."
 		}
 	},
 	"terminal": {
@@ -655,7 +687,7 @@
 	"advanced": {
 		"diff": {
 			"label": "Habilitar edició mitjançant diffs",
-			"description": "Quan està habilitat, Roo podrà editar fitxers més ràpidament i rebutjarà automàticament escriptures completes de fitxers truncats. Funciona millor amb l'últim model Claude 3.7 Sonnet.",
+			"description": "Quan està habilitat, Roo podrà editar fitxers més ràpidament i rebutjarà automàticament escriptures completes de fitxers truncats",
 			"strategy": {
 				"label": "Estratègia de diff",
 				"options": {
@@ -683,10 +715,6 @@
 		"DIFF_STRATEGY_UNIFIED": {
 			"name": "Utilitzar estratègia diff unificada experimental",
 			"description": "Activar l'estratègia diff unificada experimental. Aquesta estratègia podria reduir el nombre de reintents causats per errors del model, però pot causar comportaments inesperats o edicions incorrectes. Activeu-la només si enteneu els riscos i esteu disposats a revisar acuradament tots els canvis."
-		},
-		"SEARCH_AND_REPLACE": {
-			"name": "Utilitzar eina de cerca i reemplaçament experimental",
-			"description": "Activar l'eina de cerca i reemplaçament experimental, permetent a Roo reemplaçar múltiples instàncies d'un terme de cerca en una sola petició."
 		},
 		"INSERT_BLOCK": {
 			"name": "Utilitzar eina d'inserció de contingut experimental",
@@ -723,6 +751,21 @@
 		"NEW_TASK_REQUIRE_TODOS": {
 			"name": "Requerir la llista 'todos' per a noves tasques",
 			"description": "Quan estigui activat, l'eina new_task requerirà que es proporcioni un paràmetre 'todos'. Això garanteix que totes les noves tasques comencin amb una llista clara d'objectius. Quan estigui desactivat (per defecte), el paràmetre 'todos' continua sent opcional per a la compatibilitat amb versions anteriors."
+		},
+		"IMAGE_GENERATION": {
+			"name": "Habilitar generació d'imatges amb IA",
+			"description": "Quan estigui habilitat, Roo pot generar imatges a partir de prompts de text utilitzant els models de generació d'imatges d'OpenRouter. Requereix que es configuri una clau d'API d'OpenRouter.",
+			"openRouterApiKeyLabel": "Clau API d'OpenRouter",
+			"openRouterApiKeyPlaceholder": "Introdueix la teva clau API d'OpenRouter",
+			"getApiKeyText": "Obté la teva clau API de",
+			"modelSelectionLabel": "Model de generació d'imatges",
+			"modelSelectionDescription": "Selecciona el model per a la generació d'imatges",
+			"warningMissingKey": "⚠️ La clau API d'OpenRouter és necessària per a la generació d'imatges. Si us plau, configura-la a dalt.",
+			"successConfigured": "✓ La generació d'imatges està configurada i llesta per utilitzar"
+		},
+		"RUN_SLASH_COMMAND": {
+			"name": "Habilitar comandes de barra diagonal iniciades pel model",
+			"description": "Quan està habilitat, Roo pot executar les vostres comandes de barra diagonal per executar fluxos de treball."
 		}
 	},
 	"promptCaching": {
@@ -737,8 +780,6 @@
 	"modelInfo": {
 		"supportsImages": "Suporta imatges",
 		"noImages": "No suporta imatges",
-		"supportsComputerUse": "Suporta ús de l'ordinador",
-		"noComputerUse": "No suporta ús de l'ordinador",
 		"supportsPromptCache": "Suporta emmagatzematge en caché de prompts",
 		"noPromptCache": "No suporta emmagatzematge en caché de prompts",
 		"contextWindow": "Finestra de context:",
@@ -769,7 +810,7 @@
 		"feedback": "Si teniu qualsevol pregunta o comentari, no dubteu a obrir un issue a <githubLink>github.com/RooCodeInc/Roo-Code</githubLink> o unir-vos a <redditLink>reddit.com/r/RooCode</redditLink> o <discordLink>discord.gg/roocode</discordLink>",
 		"telemetry": {
 			"label": "Permetre informes anònims d'errors i ús",
-			"description": "Ajudeu a millorar Roo Code enviant dades d'ús anònimes i informes d'errors. Mai s'envia codi, prompts o informació personal. Vegeu la nostra política de privacitat per a més detalls."
+			"description": "Ajuda a millorar Roo Code enviant dades d'ús anònimes i informes d'error. Aquesta telemetria no recull codi, prompts o informació personal. Consulta la nostra <privacyLink>política de privacitat</privacyLink> per a més detalls. Pots desactivar-ho en qualsevol moment."
 		},
 		"settings": {
 			"import": "Importar",
@@ -793,6 +834,7 @@
 			"regionMismatch": "Avís: La regió del vostre ARN ({{arnRegion}}) no coincideix amb la regió seleccionada ({{region}}). Això pot causar problemes d'accés. El proveïdor utilitzarà la regió de l'ARN."
 		},
 		"modelAvailability": "L'ID de model ({{modelId}}) que heu proporcionat no està disponible. Si us plau, trieu un altre model.",
+		"modelDeprecated": "Aquest model ja no està disponible. Si us plau, seleccioneu un model diferent.",
 		"providerNotAllowed": "El proveïdor '{{provider}}' no està permès per la vostra organització",
 		"modelNotAllowed": "El model '{{model}}' no està permès per al proveïdor '{{provider}}' per la vostra organització",
 		"profileInvalid": "Aquest perfil conté un proveïdor o model que no està permès per la vostra organització",
@@ -835,5 +877,25 @@
 	"includeMaxOutputTokensDescription": "Enviar el paràmetre de tokens màxims de sortida a les sol·licituds API. Alguns proveïdors poden no admetre això.",
 	"limitMaxTokensDescription": "Limitar el nombre màxim de tokens en la resposta",
 	"maxOutputTokensLabel": "Tokens màxims de sortida",
-	"maxTokensGenerateDescription": "Tokens màxims a generar en la resposta"
+	"maxTokensGenerateDescription": "Tokens màxims a generar en la resposta",
+	"serviceTier": {
+		"label": "Nivell de servei",
+		"tooltip": "Per a un processament més ràpid de les sol·licituds de l'API, proveu el nivell de servei de processament prioritari. Per a preus més baixos amb una latència més alta, proveu el nivell de processament flexible.",
+		"standard": "Estàndard",
+		"flex": "Flex",
+		"priority": "Prioritat",
+		"pricingTableTitle": "Preus per nivell de servei (preu per 1M de fitxes)",
+		"columns": {
+			"tier": "Nivell",
+			"input": "Entrada",
+			"output": "Sortida",
+			"cacheReads": "Lectures de memòria cau"
+		}
+	},
+	"ui": {
+		"collapseThinking": {
+			"label": "Replega els missatges de pensament per defecte",
+			"description": "Quan estigui activat, els blocs de pensament es replegaran per defecte fins que interactuïs amb ells"
+		}
+	}
 }

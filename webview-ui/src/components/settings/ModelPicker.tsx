@@ -3,9 +3,7 @@ import { VSCodeLink } from "@vscode/webview-ui-toolkit/react"
 import { Trans } from "react-i18next"
 import { ChevronsUpDown, Check, X } from "lucide-react"
 
-import type { ProviderSettings, ModelInfo } from "@roo-code/types"
-
-import type { OrganizationAllowList } from "@roo/cloud"
+import type { ProviderSettings, ModelInfo, OrganizationAllowList } from "@roo-code/types"
 
 import { useAppTranslation } from "@src/i18n/TranslationContext"
 import { useSelectedModel } from "@/components/ui/hooks/useSelectedModel"
@@ -36,7 +34,10 @@ type ModelIdKey = keyof Pick<
 	| "requestyModelId"
 	| "openAiModelId"
 	| "litellmModelId"
+	| "deepInfraModelId"
 	| "ioIntelligenceModelId"
+	| "vercelAiGatewayModelId"
+	| "apiModelId"
 >
 
 interface ModelPickerProps {
@@ -75,13 +76,30 @@ export const ModelPicker = ({
 	const selectTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 	const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
+	const { id: selectedModelId, info: selectedModelInfo } = useSelectedModel(apiConfiguration)
+
 	const modelIds = useMemo(() => {
 		const filteredModels = filterModels(models, apiConfiguration.apiProvider, organizationAllowList)
 
-		return Object.keys(filteredModels ?? {}).sort((a, b) => a.localeCompare(b))
-	}, [models, apiConfiguration.apiProvider, organizationAllowList])
+		// Include the currently selected model even if deprecated (so users can see what they have selected)
+		// But filter out other deprecated models from being newly selectable
+		const availableModels = Object.entries(filteredModels ?? {})
+			.filter(([modelId, modelInfo]) => {
+				// Always include the currently selected model
+				if (modelId === selectedModelId) return true
+				// Filter out deprecated models that aren't currently selected
+				return !modelInfo.deprecated
+			})
+			.reduce(
+				(acc, [modelId, modelInfo]) => {
+					acc[modelId] = modelInfo
+					return acc
+				},
+				{} as Record<string, ModelInfo>,
+			)
 
-	const { id: selectedModelId, info: selectedModelInfo } = useSelectedModel(apiConfiguration)
+		return Object.keys(availableModels).sort((a, b) => a.localeCompare(b))
+	}, [models, apiConfiguration.apiProvider, organizationAllowList, selectedModelId])
 
 	const [searchValue, setSearchValue] = useState("")
 
@@ -225,7 +243,10 @@ export const ModelPicker = ({
 				</Popover>
 			</div>
 			{errorMessage && <ApiErrorMessage errorMessage={errorMessage} />}
-			{selectedModelId && selectedModelInfo && (
+			{selectedModelInfo?.deprecated && (
+				<ApiErrorMessage errorMessage={t("settings:validation.modelDeprecated")} />
+			)}
+			{selectedModelId && selectedModelInfo && !selectedModelInfo.deprecated && (
 				<ModelInfoView
 					apiProvider={apiConfiguration.apiProvider}
 					selectedModelId={selectedModelId}

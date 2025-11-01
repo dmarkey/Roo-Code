@@ -1,5 +1,5 @@
 import { Anthropic } from "@anthropic-ai/sdk"
-import { Message, Ollama } from "ollama"
+import { Message, Ollama, type Config as OllamaOptions } from "ollama"
 import { ModelInfo, openAiModelInfoSaneDefaults, DEEP_SEEK_DEFAULT_TEMPERATURE } from "@roo-code/types"
 import { ApiStream } from "../transform/stream"
 import { BaseProvider } from "./base-provider"
@@ -7,6 +7,11 @@ import type { ApiHandlerOptions } from "../../shared/api"
 import { getOllamaModels } from "./fetchers/ollama"
 import { XmlMatcher } from "../../utils/xml-matcher"
 import type { SingleCompletionHandler, ApiHandlerCreateMessageMetadata } from "../index"
+
+interface OllamaChatOptions {
+	temperature: number
+	num_ctx?: number
+}
 
 function convertToOllamaMessages(anthropicMessages: Anthropic.Messages.MessageParam[]): Message[] {
 	const ollamaMessages: Message[] = []
@@ -140,10 +145,19 @@ export class NativeOllamaHandler extends BaseProvider implements SingleCompletio
 	private ensureClient(): Ollama {
 		if (!this.client) {
 			try {
-				this.client = new Ollama({
+				const clientOptions: OllamaOptions = {
 					host: this.options.ollamaBaseUrl || "http://localhost:11434",
 					// Note: The ollama npm package handles timeouts internally
-				})
+				}
+
+				// Add API key if provided (for Ollama cloud or authenticated instances)
+				if (this.options.ollamaApiKey) {
+					clientOptions.headers = {
+						Authorization: `Bearer ${this.options.ollamaApiKey}`,
+					}
+				}
+
+				this.client = new Ollama(clientOptions)
 			} catch (error: any) {
 				throw new Error(`Error creating Ollama client: ${error.message}`)
 			}
@@ -175,15 +189,22 @@ export class NativeOllamaHandler extends BaseProvider implements SingleCompletio
 		)
 
 		try {
+			// Build options object conditionally
+			const chatOptions: OllamaChatOptions = {
+				temperature: this.options.modelTemperature ?? (useR1Format ? DEEP_SEEK_DEFAULT_TEMPERATURE : 0),
+			}
+
+			// Only include num_ctx if explicitly set via ollamaNumCtx
+			if (this.options.ollamaNumCtx !== undefined) {
+				chatOptions.num_ctx = this.options.ollamaNumCtx
+			}
+
 			// Create the actual API request promise
 			const stream = await client.chat({
 				model: modelId,
 				messages: ollamaMessages,
 				stream: true,
-				options: {
-					num_ctx: modelInfo.contextWindow,
-					temperature: this.options.modelTemperature ?? (useR1Format ? DEEP_SEEK_DEFAULT_TEMPERATURE : 0),
-				},
+				options: chatOptions,
 			})
 
 			let totalInputTokens = 0
@@ -247,7 +268,7 @@ export class NativeOllamaHandler extends BaseProvider implements SingleCompletio
 	}
 
 	async fetchModel() {
-		this.models = await getOllamaModels(this.options.ollamaBaseUrl)
+		this.models = await getOllamaModels(this.options.ollamaBaseUrl, this.options.ollamaApiKey)
 		return this.getModel()
 	}
 
@@ -265,13 +286,21 @@ export class NativeOllamaHandler extends BaseProvider implements SingleCompletio
 			const { id: modelId } = await this.fetchModel()
 			const useR1Format = modelId.toLowerCase().includes("deepseek-r1")
 
+			// Build options object conditionally
+			const chatOptions: OllamaChatOptions = {
+				temperature: this.options.modelTemperature ?? (useR1Format ? DEEP_SEEK_DEFAULT_TEMPERATURE : 0),
+			}
+
+			// Only include num_ctx if explicitly set via ollamaNumCtx
+			if (this.options.ollamaNumCtx !== undefined) {
+				chatOptions.num_ctx = this.options.ollamaNumCtx
+			}
+
 			const response = await client.chat({
 				model: modelId,
 				messages: [{ role: "user", content: prompt }],
 				stream: false,
-				options: {
-					temperature: this.options.modelTemperature ?? (useR1Format ? DEEP_SEEK_DEFAULT_TEMPERATURE : 0),
-				},
+				options: chatOptions,
 			})
 
 			return response.message?.content || ""

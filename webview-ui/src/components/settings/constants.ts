@@ -19,8 +19,8 @@ import {
 	doubaoModels,
 	internationalZAiModels,
 	fireworksModels,
-	rooModels,
 	featherlessModels,
+	minimaxModels,
 } from "@roo-code/types"
 
 export const MODELS_BY_PROVIDER: Partial<Record<ProviderName, Record<string, ModelInfo>>> = {
@@ -42,12 +42,13 @@ export const MODELS_BY_PROVIDER: Partial<Record<ProviderName, Record<string, Mod
 	sambanova: sambaNovaModels,
 	zai: internationalZAiModels,
 	fireworks: fireworksModels,
-	roo: rooModels,
 	featherless: featherlessModels,
+	minimax: minimaxModels,
 }
 
 export const PROVIDERS = [
 	{ value: "openrouter", label: "OpenRouter" },
+	{ value: "deepinfra", label: "DeepInfra" },
 	{ value: "anthropic", label: "Anthropic" },
 	{ value: "claude-code", label: "Claude Code" },
 	{ value: "cerebras", label: "Cerebras" },
@@ -79,4 +80,6 @@ export const PROVIDERS = [
 	{ value: "featherless", label: "Featherless AI" },
 	{ value: "io-intelligence", label: "IO Intelligence" },
 	{ value: "roo", label: "Roo Code Cloud" },
+	{ value: "vercel-ai-gateway", label: "Vercel AI Gateway" },
+	{ value: "minimax", label: "MiniMax" },
 ].sort((a, b) => a.label.localeCompare(b.label))

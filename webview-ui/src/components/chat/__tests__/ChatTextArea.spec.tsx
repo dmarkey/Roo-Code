@@ -1,12 +1,11 @@
-import { render, fireEvent, screen } from "@/utils/test-utils"
-
 import { defaultModeSlug } from "@roo/modes"
 
+import { render, fireEvent, screen } from "@src/utils/test-utils"
 import { useExtensionState } from "@src/context/ExtensionStateContext"
 import { vscode } from "@src/utils/vscode"
 import * as pathMentions from "@src/utils/path-mentions"
 
-import ChatTextArea from "../ChatTextArea"
+import { ChatTextArea } from "../ChatTextArea"
 
 vi.mock("@src/utils/vscode", () => ({
 	vscode: {
@@ -1058,54 +1057,86 @@ describe("ChatTextArea", () => {
 			expect(apiConfigDropdown).toHaveAttribute("disabled")
 		})
 	})
-	describe("edit mode integration", () => {
-		it("should render edit mode UI when isEditMode is true", () => {
-			;(useExtensionState as ReturnType<typeof vi.fn>).mockReturnValue({
-				filePaths: [],
-				openedTabs: [],
-				taskHistory: [],
-				cwd: "/test/workspace",
-				customModes: [],
-				customModePrompts: {},
-			})
 
-			render(<ChatTextArea {...defaultProps} isEditMode={true} />)
+	describe("send button visibility", () => {
+		it("should show send button when there are images but no text", () => {
+			const { container } = render(
+				<ChatTextArea
+					{...defaultProps}
+					inputValue=""
+					selectedImages={["data:image/png;base64,test1", "data:image/png;base64,test2"]}
+				/>,
+			)
 
-			// The edit mode UI should be rendered
-			// We can verify this by checking for the presence of elements that are unique to edit mode
-			const cancelButton = screen.getByRole("button", { name: /cancel/i })
-			expect(cancelButton).toBeInTheDocument()
+			// Find the send button by looking for the button with SendHorizontal icon
+			const buttons = container.querySelectorAll("button")
+			const sendButton = Array.from(buttons).find(
+				(button) => button.querySelector(".lucide-send-horizontal") !== null,
+			)
 
-			// Should show save button instead of send button
-			const saveButton = screen.getByRole("button", { name: /save/i })
-			expect(saveButton).toBeInTheDocument()
-
-			// Should not show send button in edit mode
-			const sendButton = screen.queryByRole("button", { name: /send.*message/i })
-			expect(sendButton).not.toBeInTheDocument()
-		})
-
-		it("should not render edit mode UI when isEditMode is false", () => {
-			;(useExtensionState as ReturnType<typeof vi.fn>).mockReturnValue({
-				filePaths: [],
-				openedTabs: [],
-				taskHistory: [],
-				cwd: "/test/workspace",
-			})
-
-			render(<ChatTextArea {...defaultProps} isEditMode={false} />)
-
-			// The edit mode UI should not be rendered
-			const cancelButton = screen.queryByRole("button", { name: /cancel/i })
-			expect(cancelButton).not.toBeInTheDocument()
-
-			// Should show send button when not in edit mode
-			const sendButton = screen.getByRole("button", { name: /send.*message/i })
 			expect(sendButton).toBeInTheDocument()
 
-			// Should not show save button when not in edit mode
-			const saveButton = screen.queryByRole("button", { name: /save/i })
-			expect(saveButton).not.toBeInTheDocument()
+			// Check that the button is visible (has opacity-100 class when content exists)
+			expect(sendButton).toHaveClass("opacity-100")
+			expect(sendButton).toHaveClass("pointer-events-auto")
+			expect(sendButton).not.toHaveClass("opacity-0")
+			expect(sendButton).not.toHaveClass("pointer-events-none")
+		})
+
+		it("should hide send button when there is no text and no images", () => {
+			const { container } = render(<ChatTextArea {...defaultProps} inputValue="" selectedImages={[]} />)
+
+			// Find the send button by looking for the button with SendHorizontal icon
+			const buttons = container.querySelectorAll("button")
+			const sendButton = Array.from(buttons).find(
+				(button) => button.querySelector(".lucide-send-horizontal") !== null,
+			)
+
+			expect(sendButton).toBeInTheDocument()
+
+			// Check that the button is hidden (has opacity-0 class when no content)
+			expect(sendButton).toHaveClass("opacity-0")
+			expect(sendButton).toHaveClass("pointer-events-none")
+			expect(sendButton).not.toHaveClass("opacity-100")
+			expect(sendButton).not.toHaveClass("pointer-events-auto")
+		})
+
+		it("should show send button when there is text but no images", () => {
+			const { container } = render(<ChatTextArea {...defaultProps} inputValue="Some text" selectedImages={[]} />)
+
+			// Find the send button by looking for the button with SendHorizontal icon
+			const buttons = container.querySelectorAll("button")
+			const sendButton = Array.from(buttons).find(
+				(button) => button.querySelector(".lucide-send-horizontal") !== null,
+			)
+
+			expect(sendButton).toBeInTheDocument()
+
+			// Check that the button is visible
+			expect(sendButton).toHaveClass("opacity-100")
+			expect(sendButton).toHaveClass("pointer-events-auto")
+		})
+
+		it("should show send button when there is both text and images", () => {
+			const { container } = render(
+				<ChatTextArea
+					{...defaultProps}
+					inputValue="Some text"
+					selectedImages={["data:image/png;base64,test1"]}
+				/>,
+			)
+
+			// Find the send button by looking for the button with SendHorizontal icon
+			const buttons = container.querySelectorAll("button")
+			const sendButton = Array.from(buttons).find(
+				(button) => button.querySelector(".lucide-send-horizontal") !== null,
+			)
+
+			expect(sendButton).toBeInTheDocument()
+
+			// Check that the button is visible
+			expect(sendButton).toHaveClass("opacity-100")
+			expect(sendButton).toHaveClass("pointer-events-auto")
 		})
 	})
 })

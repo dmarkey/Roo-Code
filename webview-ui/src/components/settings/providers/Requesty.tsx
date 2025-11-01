@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useState } from "react"
 import { VSCodeCheckbox, VSCodeTextField } from "@vscode/webview-ui-toolkit/react"
 
-import { type ProviderSettings, requestyDefaultModelId } from "@roo-code/types"
+import { type ProviderSettings, type OrganizationAllowList, requestyDefaultModelId } from "@roo-code/types"
 
-import type { OrganizationAllowList } from "@roo/cloud"
 import type { RouterModels } from "@roo/api"
 
 import { vscode } from "@src/utils/vscode"
@@ -36,8 +35,6 @@ export const Requesty = ({
 	uriScheme,
 }: RequestyProps) => {
 	const { t } = useAppTranslation()
-
-	const [didRefetch, setDidRefetch] = useState<boolean>()
 
 	const [requestyEndpointSelected, setRequestyEndpointSelected] = useState(!!apiConfiguration.requestyBaseUrl)
 
@@ -132,18 +129,12 @@ export const Requesty = ({
 				onClick={() => {
 					vscode.postMessage({ type: "flushRouterModels", text: "requesty" })
 					refetchRouterModels()
-					setDidRefetch(true)
 				}}>
 				<div className="flex items-center gap-2">
 					<span className="codicon codicon-refresh" />
 					{t("settings:providers.refreshModels.label")}
 				</div>
 			</Button>
-			{didRefetch && (
-				<div className="flex items-center text-vscode-errorForeground">
-					{t("settings:providers.refreshModels.hint")}
-				</div>
-			)}
 			<ModelPicker
 				apiConfiguration={apiConfiguration}
 				setApiConfigurationField={setApiConfigurationField}

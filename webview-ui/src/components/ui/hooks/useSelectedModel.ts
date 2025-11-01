@@ -12,6 +12,8 @@ import {
 	deepSeekModels,
 	moonshotDefaultModelId,
 	moonshotModels,
+	minimaxDefaultModelId,
+	minimaxModels,
 	geminiDefaultModelId,
 	geminiModels,
 	mistralDefaultModelId,
@@ -51,10 +53,11 @@ import {
 	ioIntelligenceDefaultModelId,
 	ioIntelligenceModels,
 	rooDefaultModelId,
-	rooModels,
 	qwenCodeDefaultModelId,
 	qwenCodeModels,
-	BEDROCK_CLAUDE_SONNET_4_MODEL_ID,
+	vercelAiGatewayDefaultModelId,
+	BEDROCK_1M_CONTEXT_MODEL_IDS,
+	deepInfraDefaultModelId,
 } from "@roo-code/types"
 
 import type { ModelRecord, RouterModels } from "@roo/api"
@@ -62,19 +65,23 @@ import type { ModelRecord, RouterModels } from "@roo/api"
 import { useRouterModels } from "./useRouterModels"
 import { useOpenRouterModelProviders } from "./useOpenRouterModelProviders"
 import { useLmStudioModels } from "./useLmStudioModels"
+import { useOllamaModels } from "./useOllamaModels"
 
 export const useSelectedModel = (apiConfiguration?: ProviderSettings) => {
 	const provider = apiConfiguration?.apiProvider || "anthropic"
 	const openRouterModelId = provider === "openrouter" ? apiConfiguration?.openRouterModelId : undefined
 	const lmStudioModelId = provider === "lmstudio" ? apiConfiguration?.lmStudioModelId : undefined
+	const ollamaModelId = provider === "ollama" ? apiConfiguration?.ollamaModelId : undefined
 
 	const routerModels = useRouterModels()
 	const openRouterModelProviders = useOpenRouterModelProviders(openRouterModelId)
 	const lmStudioModels = useLmStudioModels(lmStudioModelId)
+	const ollamaModels = useOllamaModels(ollamaModelId)
 
 	const { id, info } =
 		apiConfiguration &&
 		(typeof lmStudioModelId === "undefined" || typeof lmStudioModels.data !== "undefined") &&
+		(typeof ollamaModelId === "undefined" || typeof ollamaModels.data !== "undefined") &&
 		typeof routerModels.data !== "undefined" &&
 		typeof openRouterModelProviders.data !== "undefined"
 			? getSelectedModel({
@@ -83,6 +90,7 @@ export const useSelectedModel = (apiConfiguration?: ProviderSettings) => {
 					routerModels: routerModels.data,
 					openRouterModelProviders: openRouterModelProviders.data,
 					lmStudioModels: lmStudioModels.data,
+					ollamaModels: ollamaModels.data,
 				})
 			: { id: anthropicDefaultModelId, info: undefined }
 
@@ -107,12 +115,14 @@ function getSelectedModel({
 	routerModels,
 	openRouterModelProviders,
 	lmStudioModels,
+	ollamaModels,
 }: {
 	provider: ProviderName
 	apiConfiguration: ProviderSettings
 	routerModels: RouterModels
 	openRouterModelProviders: Record<string, ModelInfo>
 	lmStudioModels: ModelRecord | undefined
+	ollamaModels: ModelRecord | undefined
 }): { id: string; info: ModelInfo | undefined } {
 	// the `undefined` case are used to show the invalid selection to prevent
 	// users from seeing the default model if their selection is invalid
@@ -191,8 +201,8 @@ function getSelectedModel({
 				}
 			}
 
-			// Apply 1M context for Claude Sonnet 4 when enabled
-			if (id === BEDROCK_CLAUDE_SONNET_4_MODEL_ID && apiConfiguration.awsBedrock1MContext && baseInfo) {
+			// Apply 1M context for Claude Sonnet 4 / 4.5 when enabled
+			if (BEDROCK_1M_CONTEXT_MODEL_IDS.includes(id as any) && apiConfiguration.awsBedrock1MContext && baseInfo) {
 				// Create a new ModelInfo object with updated context window
 				const info: ModelInfo = {
 					...baseInfo,
@@ -228,8 +238,13 @@ function getSelectedModel({
 			const info = moonshotModels[id as keyof typeof moonshotModels]
 			return { id, info }
 		}
+		case "minimax": {
+			const id = apiConfiguration.apiModelId ?? minimaxDefaultModelId
+			const info = minimaxModels[id as keyof typeof minimaxModels]
+			return { id, info }
+		}
 		case "zai": {
-			const isChina = apiConfiguration.zaiApiLine === "china"
+			const isChina = apiConfiguration.zaiApiLine === "china_coding"
 			const models = isChina ? mainlandZAiModels : internationalZAiModels
 			const defaultModelId = isChina ? mainlandZAiDefaultModelId : internationalZAiDefaultModelId
 			const id = apiConfiguration.apiModelId ?? defaultModelId
@@ -253,10 +268,18 @@ function getSelectedModel({
 		}
 		case "ollama": {
 			const id = apiConfiguration.ollamaModelId ?? ""
-			const info = routerModels.ollama && routerModels.ollama[id]
+			const info = ollamaModels && ollamaModels[apiConfiguration.ollamaModelId!]
+
+			const adjustedInfo =
+				info?.contextWindow &&
+				apiConfiguration?.ollamaNumCtx &&
+				apiConfiguration.ollamaNumCtx < info.contextWindow
+					? { ...info, contextWindow: apiConfiguration.ollamaNumCtx }
+					: info
+
 			return {
 				id,
-				info: info || undefined,
+				info: adjustedInfo || undefined,
 			}
 		}
 		case "lmstudio": {
@@ -266,6 +289,11 @@ function getSelectedModel({
 				id,
 				info: info || undefined,
 			}
+		}
+		case "deepinfra": {
+			const id = apiConfiguration.deepInfraModelId ?? deepInfraDefaultModelId
+			const info = routerModels.deepinfra?.[id]
+			return { id, info }
 		}
 		case "vscode-lm": {
 			const id = apiConfiguration?.vsCodeLmModelSelector
@@ -308,25 +336,19 @@ function getSelectedModel({
 			return { id, info }
 		}
 		case "roo": {
-			const requestedId = apiConfiguration.apiModelId
-
-			// Check if the requested model exists in rooModels
-			if (requestedId && rooModels[requestedId as keyof typeof rooModels]) {
-				return {
-					id: requestedId,
-					info: rooModels[requestedId as keyof typeof rooModels],
-				}
-			}
-
-			// Fallback to default model if requested model doesn't exist or is not specified
-			return {
-				id: rooDefaultModelId,
-				info: rooModels[rooDefaultModelId as keyof typeof rooModels],
-			}
+			// Roo is a dynamic provider - models are loaded from API
+			const id = apiConfiguration.apiModelId ?? rooDefaultModelId
+			const info = routerModels.roo[id]
+			return { id, info }
 		}
 		case "qwen-code": {
 			const id = apiConfiguration.apiModelId ?? qwenCodeDefaultModelId
 			const info = qwenCodeModels[id as keyof typeof qwenCodeModels]
+			return { id, info }
+		}
+		case "vercel-ai-gateway": {
+			const id = apiConfiguration.vercelAiGatewayModelId ?? vercelAiGatewayDefaultModelId
+			const info = routerModels["vercel-ai-gateway"]?.[id]
 			return { id, info }
 		}
 		// case "anthropic":
@@ -340,11 +362,11 @@ function getSelectedModel({
 			// Apply 1M context beta tier pricing for Claude Sonnet 4
 			if (
 				provider === "anthropic" &&
-				id === "claude-sonnet-4-20250514" &&
+				(id === "claude-sonnet-4-20250514" || id === "claude-sonnet-4-5") &&
 				apiConfiguration.anthropicBeta1MContext &&
 				baseInfo
 			) {
-				// Type assertion since we know claude-sonnet-4-20250514 has tiers
+				// Type assertion since we know claude-sonnet-4-20250514 and claude-sonnet-4-5 have tiers
 				const modelWithTiers = baseInfo as typeof baseInfo & {
 					tiers?: Array<{
 						contextWindow: number

@@ -30,8 +30,9 @@ import {
 	McpToolCallResponse,
 } from "../../shared/mcp"
 import { fileExistsAtPath } from "../../utils/fs"
-import { arePathsEqual } from "../../utils/path"
+import { arePathsEqual, getWorkspacePath } from "../../utils/path"
 import { injectVariables } from "../../utils/config"
+import { safeWriteJson } from "../../utils/safeWriteJson"
 
 // Discriminated union for connection states
 export type ConnectedMcpConnection = {
@@ -151,6 +152,8 @@ export class McpHub {
 	isConnecting: boolean = false
 	private refCount: number = 0 // Reference counter for active clients
 	private configChangeDebounceTimers: Map<string, NodeJS.Timeout> = new Map()
+	private isProgrammaticUpdate: boolean = false
+	private flagResetTimer?: NodeJS.Timeout
 
 	constructor(provider: ClineProvider) {
 		this.providerRef = new WeakRef(provider)
@@ -166,7 +169,7 @@ export class McpHub {
 	 */
 	public registerClient(): void {
 		this.refCount++
-		console.log(`McpHub: Client registered. Ref count: ${this.refCount}`)
+		// console.log(`McpHub: Client registered. Ref count: ${this.refCount}`)
 	}
 
 	/**
@@ -175,7 +178,9 @@ export class McpHub {
 	 */
 	public async unregisterClient(): Promise<void> {
 		this.refCount--
-		console.log(`McpHub: Client unregistered. Ref count: ${this.refCount}`)
+
+		// console.log(`McpHub: Client unregistered. Ref count: ${this.refCount}`)
+
 		if (this.refCount <= 0) {
 			console.log("McpHub: Last client unregistered. Disposing hub.")
 			await this.dispose()
@@ -276,6 +281,11 @@ export class McpHub {
 	 * Debounced wrapper for handling config file changes
 	 */
 	private debounceConfigChange(filePath: string, source: "global" | "project"): void {
+		// Skip processing if this is a programmatic update to prevent unnecessary server restarts
+		if (this.isProgrammaticUpdate) {
+			return
+		}
+
 		const key = `${source}-${filePath}`
 
 		// Clear existing timer if any
@@ -347,7 +357,7 @@ export class McpHub {
 			return
 		}
 
-		const workspaceFolder = vscode.workspace.workspaceFolders[0]
+		const workspaceFolder = this.providerRef.deref()?.cwd ?? getWorkspacePath()
 		const projectMcpPattern = new vscode.RelativePattern(workspaceFolder, ".roo/mcp.json")
 
 		// Create a file system watcher for the project MCP file pattern
@@ -549,12 +559,8 @@ export class McpHub {
 
 	// Get project-level MCP configuration path
 	private async getProjectMcpPath(): Promise<string | null> {
-		if (!vscode.workspace.workspaceFolders?.length) {
-			return null
-		}
-
-		const workspaceFolder = vscode.workspace.workspaceFolders[0]
-		const projectMcpDir = path.join(workspaceFolder.uri.fsPath, ".roo")
+		const workspacePath = this.providerRef.deref()?.cwd ?? getWorkspacePath()
+		const projectMcpDir = path.join(workspacePath, ".roo")
 		const projectMcpPath = path.join(projectMcpDir, "mcp.json")
 
 		try {
@@ -1371,13 +1377,16 @@ export class McpHub {
 						this.removeFileWatchersForServer(serverName)
 						await this.deleteConnection(serverName, serverSource)
 						// Re-add as a disabled connection
-						await this.connectToServer(serverName, JSON.parse(connection.server.config), serverSource)
+						// Re-read config from file to get updated disabled state
+					const updatedConfig = await this.readServerConfigFromFile(serverName, serverSource)
+					await this.connectToServer(serverName, updatedConfig, serverSource)
 					} else if (!disabled && connection.server.status === "disconnected") {
 						// If enabling a disabled server, connect it
-						const config = JSON.parse(connection.server.config)
+						// Re-read config from file to get updated disabled state
+						const updatedConfig = await this.readServerConfigFromFile(serverName, serverSource)
 						await this.deleteConnection(serverName, serverSource)
 						// When re-enabling, file watchers will be set up in connectToServer
-						await this.connectToServer(serverName, config, serverSource)
+						await this.connectToServer(serverName, updatedConfig, serverSource)
 					} else if (connection.server.status === "connected") {
 						// Only refresh capabilities if connected
 						connection.server.tools = await this.fetchToolsList(serverName, serverSource)
@@ -1397,6 +1406,57 @@ export class McpHub {
 			this.showErrorMessage(`Failed to update server ${serverName} state`, error)
 			throw error
 		}
+	}
+
+	/**
+	 * Helper method to read a server's configuration from the appropriate settings file
+	 * @param serverName The name of the server to read
+	 * @param source Whether to read from the global or project config
+	 * @returns The validated server configuration
+	 */
+	private async readServerConfigFromFile(
+		serverName: string,
+		source: "global" | "project" = "global",
+	): Promise<z.infer<typeof ServerConfigSchema>> {
+		// Determine which config file to read
+		let configPath: string
+		if (source === "project") {
+			const projectMcpPath = await this.getProjectMcpPath()
+			if (!projectMcpPath) {
+				throw new Error("Project MCP configuration file not found")
+			}
+			configPath = projectMcpPath
+		} else {
+			configPath = await this.getMcpSettingsFilePath()
+		}
+
+		// Ensure the settings file exists and is accessible
+		try {
+			await fs.access(configPath)
+		} catch (error) {
+			console.error("Settings file not accessible:", error)
+			throw new Error("Settings file not accessible")
+		}
+
+		// Read and parse the config file
+		const content = await fs.readFile(configPath, "utf-8")
+		const config = JSON.parse(content)
+
+		// Validate the config structure
+		if (!config || typeof config !== "object") {
+			throw new Error("Invalid config structure")
+		}
+
+		if (!config.mcpServers || typeof config.mcpServers !== "object") {
+			throw new Error("No mcpServers section in config")
+		}
+
+		if (!config.mcpServers[serverName]) {
+			throw new Error(`Server ${serverName} not found in config`)
+		}
+
+		// Validate and return the server config
+		return this.validateServerConfig(config.mcpServers[serverName], serverName)
 	}
 
 	/**
@@ -1465,7 +1525,20 @@ export class McpHub {
 			mcpServers: config.mcpServers,
 		}
 
-		await fs.writeFile(configPath, JSON.stringify(updatedConfig, null, 2))
+		// Set flag to prevent file watcher from triggering server restart
+		if (this.flagResetTimer) {
+			clearTimeout(this.flagResetTimer)
+		}
+		this.isProgrammaticUpdate = true
+		try {
+			await safeWriteJson(configPath, updatedConfig)
+		} finally {
+			// Reset flag after watcher debounce period (non-blocking)
+			this.flagResetTimer = setTimeout(() => {
+				this.isProgrammaticUpdate = false
+				this.flagResetTimer = undefined
+			}, 600)
+		}
 	}
 
 	public async updateServerTimeout(
@@ -1543,7 +1616,7 @@ export class McpHub {
 					mcpServers: config.mcpServers,
 				}
 
-				await fs.writeFile(configPath, JSON.stringify(updatedConfig, null, 2))
+				await safeWriteJson(configPath, updatedConfig)
 
 				// Update server connections with the correct source
 				await this.updateServerConnections(config.mcpServers, serverSource)
@@ -1688,7 +1761,20 @@ export class McpHub {
 			targetList.splice(toolIndex, 1)
 		}
 
-		await fs.writeFile(normalizedPath, JSON.stringify(config, null, 2))
+		// Set flag to prevent file watcher from triggering server restart
+		if (this.flagResetTimer) {
+			clearTimeout(this.flagResetTimer)
+		}
+		this.isProgrammaticUpdate = true
+		try {
+			await safeWriteJson(normalizedPath, config)
+		} finally {
+			// Reset flag after watcher debounce period (non-blocking)
+			this.flagResetTimer = setTimeout(() => {
+				this.isProgrammaticUpdate = false
+				this.flagResetTimer = undefined
+			}, 600)
+		}
 
 		if (connection) {
 			connection.server.tools = await this.fetchToolsList(serverName, source)
@@ -1797,6 +1883,13 @@ export class McpHub {
 			clearTimeout(timer)
 		}
 		this.configChangeDebounceTimers.clear()
+
+		// Clear flag reset timer and reset programmatic update flag
+		if (this.flagResetTimer) {
+			clearTimeout(this.flagResetTimer)
+			this.flagResetTimer = undefined
+		}
+		this.isProgrammaticUpdate = false
 
 		this.removeAllFileWatchers()
 		for (const connection of this.connections) {

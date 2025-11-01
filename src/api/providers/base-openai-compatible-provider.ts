@@ -3,13 +3,14 @@ import OpenAI from "openai"
 
 import type { ModelInfo } from "@roo-code/types"
 
-import type { ApiHandlerOptions } from "../../shared/api"
+import { type ApiHandlerOptions, getModelMaxOutputTokens } from "../../shared/api"
 import { ApiStream } from "../transform/stream"
 import { convertToOpenAiMessages } from "../transform/openai-format"
 
 import type { SingleCompletionHandler, ApiHandlerCreateMessageMetadata } from "../index"
 import { DEFAULT_HEADERS } from "./constants"
 import { BaseProvider } from "./base-provider"
+import { handleOpenAIError } from "./utils/openai-error-handler"
 
 type BaseOpenAiCompatibleProviderOptions<ModelName extends string> = ApiHandlerOptions & {
 	providerName: string
@@ -68,25 +69,33 @@ export abstract class BaseOpenAiCompatibleProvider<ModelName extends string>
 		metadata?: ApiHandlerCreateMessageMetadata,
 		requestOptions?: OpenAI.RequestOptions,
 	) {
-		const {
-			id: model,
-			info: { maxTokens: max_tokens },
-		} = this.getModel()
+		const { id: model, info } = this.getModel()
+
+		// Centralized cap: clamp to 20% of the context window (unless provider-specific exceptions apply)
+		const max_tokens =
+			getModelMaxOutputTokens({
+				modelId: model,
+				model: info,
+				settings: this.options,
+				format: "openai",
+			}) ?? undefined
+
+		const temperature = this.options.modelTemperature ?? this.defaultTemperature
 
 		const params: OpenAI.Chat.Completions.ChatCompletionCreateParamsStreaming = {
 			model,
 			max_tokens,
+			temperature,
 			messages: [{ role: "system", content: systemPrompt }, ...convertToOpenAiMessages(messages)],
 			stream: true,
 			stream_options: { include_usage: true },
 		}
 
-		// Only include temperature if explicitly set
-		if (this.options.modelTemperature !== undefined) {
-			params.temperature = this.options.modelTemperature
+		try {
+			return this.client.chat.completions.create(params, requestOptions)
+		} catch (error) {
+			throw handleOpenAIError(error, this.providerName)
 		}
-
-		return this.client.chat.completions.create(params, requestOptions)
 	}
 
 	override async *createMessage(
@@ -127,11 +136,7 @@ export abstract class BaseOpenAiCompatibleProvider<ModelName extends string>
 
 			return response.choices[0]?.message.content || ""
 		} catch (error) {
-			if (error instanceof Error) {
-				throw new Error(`${this.providerName} completion error: ${error.message}`)
-			}
-
-			throw error
+			throw handleOpenAIError(error, this.providerName)
 		}
 	}
 

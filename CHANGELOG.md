@@ -1,6 +1,380 @@
 # Roo Code Changelog
 
+## [3.29.5] - 2025-11-01
+
+- Fix: Resolve Qdrant codebase_search error by adding keyword index for type field (#8963 by @rossdonald, PR by @app/roomote)
+- Fix cost and token tracking between provider styles to ensure accurate usage metrics (thanks @mrubens!)
+
+## [3.29.4] - 2025-10-30
+
+- Feat: Add Minimax Provider (thanks @Maosghoul!)
+- Fix: prevent infinite loop when canceling during auto-retry (#8901 by @mini2s, PR by @app/roomote)
+- Fix: Enhanced codebase index recovery and reuse ('Start Indexing' button now reuses existing Qdrant index) (#8129 by @jaroslaw-weber, PR by @heyseth)
+- Fix: make code index initialization non-blocking at activation (#8777 by @cjlawson02, PR by @daniel-lxs)
+- Fix: remove search_and_replace tool from codebase (#8891 by @hannesrudolph, PR by @app/roomote)
+- Fix: custom modes under custom path not showing (#8122 by @hannesrudolph, PR by @elianiva)
+- Fix: prevent MCP server restart when toggling tool permissions (#8231 by @hannesrudolph, PR by @heyseth)
+- Fix: truncate type definition to match max read line (#8149 by @chenxluo, PR by @elianiva)
+- Fix: auto-sync enableReasoningEffort with reasoning dropdown selection (thanks @daniel-lxs!)
+- Fix: Gate auth-driven Roo model refresh to active provider only (thanks @daniel-lxs!)
+- Prevent a noisy cloud agent exception (thanks @cte!)
+- Feat: improve @ file search for large projects (#5721 by @Naituw, PR by @daniel-lxs)
+- Feat: add zai-glm-4.6 model to Cerebras and set gpt-oss-120b as default (thanks @kevint-cerebras!)
+- Feat: rename MCP Errors tab to Logs for mixed-level messages (#8893 by @hannesrudolph, PR by @app/roomote)
+- docs(vscode-lm): clarify VS Code LM API integration warning (thanks @hannesrudolph!)
+
+## [3.29.3] - 2025-10-28
+
+- Update Gemini models with latest 09-2025 versions including Gemini 2.5 Pro and Flash (#8485 by @cleacos, PR by @roomote)
+- Add reasoning support for Z.ai GLM binary thinking mode (#8465 by @BeWater799, PR by @daniel-lxs)
+- Enable reasoning in Roo provider (thanks @mrubens!)
+- Add settings to configure time and cost display in system prompt (#8450 by @jaxnb, PR by @roomote)
+- Fix: Use max_output_tokens when available in LiteLLM fetcher (#8454 by @fabb, PR by @roomote)
+- Fix: Process queued messages after context condensing completes (#8477 by @JosXa, PR by @roomote)
+- Fix: Use monotonic clock for rate limiting to prevent timing issues (#7770 by @intermarkec, PR by @chrarnoldus)
+- Fix: Resolve checkpoint menu popover overflow (thanks @daniel-lxs!)
+- Fix: LiteLLM test failures after merge (thanks @daniel-lxs!)
+- Improve UX: Focus textbox and add newlines after adding to context (thanks @mrubens!)
+
+## [3.29.2] - 2025-10-27
+
+- Add support for LongCat-Flash-Thinking-FP8 models in Chutes AI provider (#8425 by @leakless21, PR by @roomote)
+- Fix: Remove specific Claude model version from settings descriptions to avoid outdated references (#8435 by @rwydaegh, PR by @roomote)
+- Fix: Correct caching logic in Roo provider to improve performance (thanks @mrubens!)
+- Fix: Ensure free models don't display pricing information in the UI (thanks @mrubens!)
+
+## [3.29.1] - 2025-10-26
+
+![3.29.1 Release - Window Cleaning](/releases/3.29.1-release.png)
+
+- Fix: Clean up max output token calculations to prevent context window overruns (#8821 by @enerage, PR by @roomote)
+- Fix: Change Add to Context keybinding to avoid Redo conflict (#8652 by @swythan, PR by @roomote)
+- Fix provider model loading race conditions (thanks @mrubens!)
+
+## [3.29.0] - 2025-10-24
+
+![3.29.0 Release - Intelligent File Reading](/releases/3.29.0-release.png)
+
+- Add token-budget based file reading with intelligent preview to avoid context overruns (thanks @daniel-lxs!)
+- Enable browser-use tool for all image-capable models (#8116 by @hannesrudolph, PR by @app/roomote!)
+- Add dynamic model loading for Roo Code Cloud provider (thanks @app/roomote!)
+- Fix: Respect nested .gitignore files in search_files (#7921 by @hannesrudolph, PR by @daniel-lxs)
+- Fix: Preserve trailing newlines in stripLineNumbers for apply_diff (#8020 by @liyi3c, PR by @app/roomote)
+- Fix: Exclude max tokens field for models that don't support it in export (#7944 by @hannesrudolph, PR by @elianiva)
+- Retry API requests on stream failures instead of aborting task (thanks @daniel-lxs!)
+- Improve auto-approve button responsiveness (thanks @daniel-lxs!)
+- Add checkpoint initialization timeout settings and fix checkpoint timeout warnings (#7843 by @NaccOll, PR by @NaccOll)
+- Always show checkpoint restore options regardless of change detection (thanks @daniel-lxs!)
+- Improve checkpoint menu translations (thanks @daniel-lxs!)
+- Add GLM-4.6-turbo model to chutes ai provider (thanks @mohammad154!)
+- Add Claude Haiku 4.5 to prompt caching models (thanks @hannesrudolph!)
+- Expand Z.ai model coverage with GLM-4.5-X, AirX, Flash (thanks @hannesrudolph!)
+- Update Mistral Medium model name (#8362 by @ThomsenDrake, PR by @ThomsenDrake)
+- Remove GPT-5 instructions/reasoning_summary from UI message metadata to prevent ui_messages.json bloat (thanks @hannesrudolph!)
+- Normalize docs-extractor audience tags; remove admin/stakeholder; strip tool invocations (thanks @hannesrudolph!)
+- Update X/Twitter username from roo_code to roocode (thanks @app/roomote!)
+- Update Configuring Profiles video link (thanks @app/roomote!)
+- Fix link text for Roomote Control in README (thanks @laz-001!)
+- Remove verbose error for cloud agents (thanks @cte!)
+- Try 5s status mutation timeout (thanks @cte!)
+
+## [3.28.18] - 2025-10-17
+
+- Fix: Remove request content from UI messages to improve performance and reduce clutter (#5601 by @MuriloFP, #8594 by @multivac2x, #8690 by @hannesrudolph, PR by @mrubens)
+- Fix: Prevent file editing issues when git diff views are open (thanks @hassoncs!)
+- Fix: Add userAgent to Bedrock client for version tracking (#8660 by @ajjuaire, PR by @app/roomote)
+- Feat: Z AI now uses only two coding endpoints for better performance (#8687 by @hannesrudolph)
+- Feat: Update image generation model selection for improved quality (thanks @chrarnoldus!)
+
+## [3.28.17] - 2025-10-15
+
+- Add support for Claude Haiku 4.5 model (thanks @daniel-lxs!)
+- Fix: Update zh-TW run command title translation (thanks @PeterDaveHello!)
+
+## [3.28.16] - 2025-10-09
+
+![3.28.16 Release - Expanded Context Window](/releases/3.28.16-release.png)
+
+- feat: Add Claude Sonnet 4.5 1M context window support for Claude Code (thanks @ColbySerpa!)
+- feat: Identify cloud tasks in the extension bridge (thanks @cte!)
+- fix: Add the parent task ID in telemetry (thanks @mrubens!)
+
+## [3.28.15] - 2025-10-03
+
+![3.28.15 Release - Kangaroo Sliding Down a Chute](/releases/3.28.15-release.png)
+
+- Add new DeepSeek and GLM models with detailed descriptions to the Chutes provider (thanks @mohammad154!)
+- Fix: properly reset cost limit tracking when user clicks "Reset and Continue" (#6889 by @alecoot, PR by app/roomote)
+- Fix: improve save button activation in prompts settings (#5780 by @beccare, PR by app/roomote)
+- Fix: overeager 'there are unsaved changes' dialog in settings (thanks @brunobergher!)
+- Fix: show send button when only images are selected in chat textarea (thanks app/roomote!)
+- Fix: Claude Sonnet 4.5 compatibility improvements (thanks @mrubens!)
+- Add UsageStats schema and type for better analytics tracking (thanks app/roomote!)
+- Include reasoning messages in cloud tasks (thanks @mrubens!)
+- Security: update dependency vite to v6.3.6 (thanks app/renovate!)
+- Deprecate free grok 4 fast model (thanks @mrubens!)
+- Remove unsupported Gemini 2.5 Flash Image Preview free model (thanks @SannidhyaSah!)
+- Add structured data to the homepage for better SEO (thanks @mrubens!)
+- Update dependency glob to v11.0.3 (thanks app/renovate!)
+
+## [3.28.14] - 2025-09-30
+
+![3.28.14 Release - GLM-4.6 Model Support](/releases/3.28.14-release.png)
+
+- Add support for GLM-4.6 model for z.ai provider (#8406 by @dmarkey, PR by @roomote)
+
+## [3.28.13] - 2025-09-29
+
+- Fix: Remove topP parameter from Bedrock inference config (#8377 by @ronyblum, PR by @daniel-lxs)
+- Fix: Correct Vertex AI Sonnet 4.5 model configuration (#8387 by @nickcatal, PR by @mrubens!)
+
+## [3.28.12] - 2025-09-29
+
+- Fix: Correct Anthropic Sonnet 4.5 model ID and add Bedrock 1M context checkbox (thanks @daniel-lxs!)
+
+## [3.28.11] - 2025-09-29
+
+- Fix: Correct AWS Bedrock Claude Sonnet 4.5 model identifier (#8371 by @sunhyung, PR by @app/roomote)
+- Fix: Correct Claude Sonnet 4.5 model ID format (thanks @daniel-lxs!)
+
+## [3.28.10] - 2025-09-29
+
+![3.28.10 Release - Kangaroo Writing Sonnet 4.5](/releases/3.28.10-release.png)
+
+- Feat: Add Sonnet 4.5 support (thanks @daniel-lxs!)
+- Fix: Resolve max_completion_tokens issue for GPT-5 models in LiteLLM provider (#6979 by @lx1054331851, PR by @roomote)
+- Fix: Make chat icons properly sized with shrink-0 class (thanks @mrubens!)
+- Enhancement: Track telemetry settings changes for better analytics (thanks @mrubens!)
+- Web: Add testimonials section to website (thanks @brunobergher!)
+- CI: Refresh contrib.rocks cache workflow for contributor badges (thanks @hannesrudolph!)
+
+## [3.28.9] - 2025-09-26
+
+![3.28.9 Release - Supernova Upgrade](/releases/3.28.9-release.png)
+
+- The free Supernova model now has a 1M token context window (thanks @mrubens!)
+- Experiment to show the Roo provider on the welcome screen (thanks @mrubens!)
+- Web: Website improvements to https://roocode.com/ (thanks @brunobergher!)
+- Fix: Remove <thinking> tags from prompts for cleaner output and fewer tokens (#8318 by @hannesrudolph, PR by @app/roomote)
+- Correct tool use suggestion to improve model adherence to suggestion (thanks @hannesrudolph!)
+- feat: log out from cloud when resetting extension state (thanks @app/roomote!)
+- feat: Add telemetry tracking to DismissibleUpsell component (thanks @app/roomote!)
+- refactor: remove pr-reviewer mode (thanks @daniel-lxs!)
+- Removing user hint when refreshing models (thanks @requesty-JohnCosta27!)
+
+## [3.28.8] - 2025-09-25
+
+![3.28.8 Release - Bug fixes and improvements](/releases/3.28.8-release.png)
+
+- Fix: Resolve frequent "No tool used" errors by clarifying tool-use rules (thanks @hannesrudolph!)
+- Fix: Include initial ask in condense summarization (thanks @hannesrudolph!)
+- Add support for more free models in the Roo provider (thanks @mrubens!)
+- Show cloud switcher and option to add a team when logged in (thanks @mrubens!)
+- Add Opengraph image for web (thanks @brunobergher!)
+
+## [3.28.7] - 2025-09-23
+
+![3.28.7 Release - Hidden Thinking](/releases/3.28.7-release.png)
+
+- UX: Collapse thinking blocks by default with UI settings to always show them (thanks @brunobergher!)
+- Fix: Resolve checkpoint restore popover positioning issue (#8219 by @NaccOll, PR by @app/roomote)
+- Add cloud account switcher functionality (thanks @mrubens!)
+- Add support for zai-org/GLM-4.5-turbo model in Chutes provider (#8155 by @mugnimaestra, PR by @app/roomote)
+
+## [3.28.6] - 2025-09-23
+
+![3.28.6 Release - Kangaroo studying ancient codex](/releases/3.28.6-release.png)
+
+- Feat: Add GPT-5-Codex model (thanks @daniel-lxs!)
+- Feat: Add keyboard shortcut for toggling auto-approve (Cmd/Ctrl+Alt+A) (thanks @brunobergher!)
+- Fix: Improve reasoning block formatting for better readability (thanks @daniel-lxs!)
+- Fix: Respect Ollama Modelfile num_ctx configuration (#7797 by @hannesrudolph, PR by @app/roomote)
+- Fix: Prevent checkpoint text from wrapping in non-English languages (#8206 by @NaccOll, PR by @app/roomote)
+- Remove language selection and word wrap toggle from CodeBlock (thanks @mrubens!)
+- Feat: Add package.nls.json checking to find-missing-translations script (thanks @app/roomote!)
+- Fix: Bare metal evals fixes (thanks @cte!)
+- Fix: Follow-up questions should trigger the "interactive" state (thanks @cte!)
+
+## [3.28.5] - 2025-09-20
+
+![3.28.5 Release - Kangaroo staying hydrated](/releases/3.28.5-release.png)
+
+- Fix: Resolve duplicate rehydrate during reasoning; centralize rehydrate and preserve cancel metadata (#8153 by @hannesrudolph, PR by @hannesrudolph)
+- Add an announcement for Supernova (thanks @mrubens!)
+- Wrap code blocks by default for improved readability (thanks @mrubens!)
+- Fix: Support dash prefix in parseMarkdownChecklist for todo lists (#8054 by @NaccOll, PR by app/roomote)
+- Fix: Apply tiered pricing for Gemini models via Vertex AI (#8017 by @ikumi3, PR by app/roomote)
+- Update SambaNova models to latest versions (thanks @snova-jorgep!)
+- Update privacy policy to allow occasional emails (thanks @jdilla1277!)
+
+## [3.28.4] - 2025-09-19
+
+![3.28.4 Release - Supernova Discovery](/releases/3.28.4-release.png)
+
+- UX: Redesigned Message Feed (thanks @brunobergher!)
+- UX: Responsive Auto-Approve (thanks @brunobergher!)
+- Add telemetry retry queue for network resilience (thanks @daniel-lxs!)
+- Fix: Transform keybindings in nightly build to fix command+y shortcut (thanks @app/roomote!)
+- New code-supernova stealth model in the Roo Code Cloud provider (thanks @mrubens!)
+
+## [3.28.3] - 2025-09-16
+
+![3.28.3 Release - UI/UX Improvements and Bug Fixes](/releases/3.28.3-release.png)
+
+- Fix: Filter out Claude Code built-in tools (ExitPlanMode, BashOutput, KillBash) (#7817 by @juliettefournier-econ, PR by @roomote)
+- Replace + icon with edit icon for New Task button (#7941 by @hannesrudolph, PR by @roomote)
+- Fix: Corrected C# tree-sitter query (#5238 by @vadash, PR by @mubeen-zulfiqar)
+- Add keyboard shortcut for "Add to Context" action (#7907 by @hannesrudolph, PR by @roomote)
+- Fix: Context menu is obscured when edit message (#7759 by @mini2s, PR by @NaccOll)
+- Fix: Handle ByteString conversion errors in OpenAI embedders (#7959 by @PavelA85, PR by @daniel-lxs)
+- Add Z.ai coding plan support (thanks @daniel-lxs!)
+- Move slash commands to Settings tab with gear icon for discoverability (thanks @roomote!)
+- Reposition Add Image button inside ChatTextArea (thanks @roomote!)
+- Bring back a way to temporarily and globally pause auto-approve without losing your toggle state (thanks @brunobergher!)
+- Makes text area buttons appear only when there's text (thanks @brunobergher!)
+- CONTRIBUTING.md tweaks and issue template rewrite (thanks @hannesrudolph!)
+- Bump axios from 1.9.0 to 1.12.0 (thanks @dependabot!)
+
+## [3.28.2] - 2025-09-14
+
+![3.28.2 Release - Auto-approve improvements](/releases/3.28.2-release.png)
+
+- Improve auto-approve UI with smaller and more subtle design (thanks @brunobergher!)
+- Fix: Message queue re-queue loop in Task.ask() causing performance issues (#7861 by @hannesrudolph, PR by @daniel-lxs)
+- Fix: Restrict @-mention parsing to line-start or whitespace boundaries to prevent false triggers (#7875 by @hannesrudolph, PR by @app/roomote)
+- Fix: Make nested git repository warning persistent with path info for better visibility (#7884 by @hannesrudolph, PR by @app/roomote)
+- Fix: Include API key in Ollama /api/tags requests for authenticated instances (#7902 by @ItsOnlyBinary, PR by @app/roomote)
+- Fix: Preserve original first message context during conversation condensing (thanks @daniel-lxs!)
+- Add Qwen3 Next 80B A3B models to chutes provider (thanks @daniel-lxs!)
+- Disable Roomote Control on logout for better security (thanks @cte!)
+- Add padding to the cloudview for better visual spacing (thanks @mrubens!)
+
+## [3.28.1] - 2025-09-11
+
+![3.28.1 Release - Kangaroo riding rocket to the clouds](/releases/3.28.1-release.png)
+
+- Announce Roo Code Cloud!
+- Add cloud task button for opening tasks in Roo Code Cloud (thanks @app/roomote!)
+- Make Posthog telemetry the default (thanks @mrubens!)
+- Show notification when the checkpoint initialization fails (thanks @app/roomote!)
+- Bust cache in generated image preview (thanks @mrubens!)
+- Fix: Center active mode in selector dropdown on open (#7882 by @hannesrudolph, PR by @app/roomote)
+- Fix: Preserve first message during conversation condensing (thanks @daniel-lxs!)
+
+## [3.28.0] - 2025-09-10
+
+![3.28.0 Release - Continue tasks in Roo Code Cloud](/releases/3.28.0-release.png)
+
+- feat: Continue tasks in Roo Code Cloud (thanks @brunobergher!)
+- feat: Support connecting to Cloud without redirect handling (thanks @mrubens!)
+- feat: Add toggle to control task syncing to Cloud (thanks @jr!)
+- feat: Add click-to-edit, ESC-to-cancel, and fix padding consistency for chat messages (#7788 by @hannesrudolph, PR by @app/roomote)
+- feat: Make reasoning more visible (thanks @app/roomote!)
+- fix: Fix Groq context window display (thanks @mrubens!)
+- fix: Add GIT_EDITOR env var to merge-resolver mode for non-interactive rebase (thanks @daniel-lxs!)
+- fix: Resolve chat message edit/delete duplication issues (thanks @daniel-lxs!)
+- fix: Reduce CodeBlock button z-index to prevent overlap with popovers (#7703 by @A0nameless0man, PR by @daniel-lxs)
+- fix: Revert PR #7188 - Restore temperature parameter to fix TabbyApi/ExLlamaV2 crashes (#7581 by @drknyt, PR by @daniel-lxs)
+- fix: Make ollama models info transport work like lmstudio (#7674 by @ItsOnlyBinary, PR by @ItsOnlyBinary)
+- fix: Update DeepSeek pricing to new unified rates effective Sept 5, 2025 (#7685 by @NaccOll, PR by @app/roomote)
+- feat: Update Vertex AI models and regions (#7725 by @ssweens, PR by @ssweens)
+- chore: Update dependency eslint-plugin-turbo to v2.5.6 (thanks @app/renovate!)
+- chore: Update dependency @changesets/cli to v2.29.6 (thanks @app/renovate!)
+- chore: Update dependency nock to v14.0.10 (thanks @app/renovate!)
+- chore: Update dependency eslint-config-prettier to v10.1.8 (thanks @app/renovate!)
+- chore: Update dependency esbuild to v0.25.9 (thanks @app/renovate!)
+
+## [3.27.0] - 2025-09-05
+
+![3.27.0 Release - Bug Fixes and Improvements](/releases/3.27.0-release.png)
+
+- Add: User message editing and deletion functionality (thanks @NaccOll!)
+- Add: Kimi K2-0905 model support in Chutes provider (#7700 by @pwilkin, PR by @app/roomote)
+- Fix: Prevent stack overflow in codebase indexing for large projects (#7588 by @StarTrai1, PR by @daniel-lxs)
+- Fix: Resolve race condition in Gemini Grounding Sources by improving code design (#6372 by @daniel-lxs, PR by @HahaBill)
+- Fix: Preserve conversation context by retrying with full conversation on invalid previous_response_id (thanks @daniel-lxs!)
+- Fix: Identify MCP and slash command config path in multiple folder workspaces (#6720 by @kfuglsang, PR by @NaccOll)
+- Fix: Handle array paths from VSCode terminal profiles correctly (#7695 by @Amosvcc, PR by @app/roomote)
+- Fix: Improve WelcomeView styling and readability (thanks @daniel-lxs!)
+- Fix: Resolve CI e2e test ETIMEDOUT errors when downloading VS Code (thanks @daniel-lxs!)
+
+## [3.26.7] - 2025-09-04
+
+![3.26.7 Release - OpenAI Service Tiers](/releases/3.26.7-release.png)
+
+- Feature: Add OpenAI Responses API service tiers (flex/priority) with UI selector and pricing (thanks @hannesrudolph!)
+- Feature: Add DeepInfra as a model provider in Roo Code (#7661 by @Thachnh, PR by @Thachnh)
+- Feature: Update kimi-k2-0905-preview and kimi-k2-turbo-preview models on the Moonshot provider (thanks @CellenLee!)
+- Feature: Add kimi-k2-0905-preview to Groq, Moonshot, and Fireworks (thanks @daniel-lxs and Cline!)
+- Fix: Prevent countdown timer from showing in history for answered follow-up questions (#7624 by @XuyiK, PR by @daniel-lxs)
+- Fix: Moonshot's maximum return token count limited to 1024 issue resolved (#6936 by @greyishsong, PR by @wangxiaolong100)
+- Fix: Add error transform to cryptic OpenAI SDK errors when API key is invalid (#7483 by @A0nameless0man, PR by @app/roomote)
+- Fix: Validate MCP tool exists before execution (#7631 by @R-omk, PR by @app/roomote)
+- Fix: Handle zsh glob qualifiers correctly (thanks @mrubens!)
+- Fix: Handle zsh process substitution correctly (thanks @mrubens!)
+- Fix: Minor zh-TW Traditional Chinese locale typo fix (thanks @PeterDaveHello!)
+
+## [3.26.6] - 2025-09-03
+
+![3.26.6 Release - Bug Fixes and Tool Improvements](/releases/3.26.6-release.png)
+
+- Add experimental run_slash_command tool to let the model initiate slash commands (thanks @app/roomote!)
+- Fix: use askApproval wrapper in insert_content and search_and_replace tools (#7648 by @hannesrudolph, PR by @app/roomote)
+- Add Kimi K2 Turbo model configuration to moonshotModels (thanks @wangxiaolong100!)
+- Fix: preserve scroll position when switching tabs in settings (thanks @DC-Dancao!)
+
+## [3.26.5] - 2025-09-03
+
+![3.26.5 Release - Enhanced AI Thinking Capabilities](/releases/3.26.5-release.png)
+
+- feat: Add support for Qwen3 235B A22B Thinking 2507 model in chutes (thanks @mohammad154!)
+- feat: Add auto-approve support for MCP access_resource tool (#7565 by @m-ibm, PR by @daniel-lxs)
+- feat: Add configurable embedding batch size for code indexing (#7356 by @BenLampson, PR by @app/roomote)
+- fix: Add cache reporting support for OpenAI-Native provider (thanks @hannesrudolph!)
+- feat: Move message queue to the extension host for better performance (thanks @cte!)
+
+## [3.26.4] - 2025-09-01
+
+![3.26.4 Release - Memory Optimization](/releases/3.26.4-release.png)
+
+- Optimize memory usage for image handling in webview (thanks @daniel-lxs!)
+- Fix: Special tokens should not break task processing (#7539 by @pwilkin, PR by @pwilkin)
+- Add Ollama API key support for Turbo mode (#7147 by @LivioGama, PR by @app/roomote)
+- Rename Account tab to Cloud tab for clarity (thanks @app/roomote!)
+- Add kangaroo-themed release image generation (thanks @mrubens!)
+
+## [3.26.3] - 2025-08-29
+
+![3.26.3 Release - Kangaroo Photo Editor](/releases/3.26.3-release.png)
+
+- Add optional input image parameter to image generation tool (thanks @roomote!)
+- Refactor: Flatten image generation settings structure (thanks @daniel-lxs!)
+- Show console logging in vitests when the --no-silent flag is set (thanks @hassoncs!)
+
+## [3.26.2] - 2025-08-28
+
+![3.26.2 Release - Kangaroo Digital Artist](/releases/3.26.2-release.png)
+
+- feat: Add experimental image generation tool with OpenRouter integration (thanks @daniel-lxs!)
+- Fix: Resolve GPT-5 Responses API issues with condensing and image support (#7334 by @nlbuescher, PR by @daniel-lxs)
+- Fix: Hide .rooignore'd files from environment details by default (#7368 by @AlexBlack772, PR by @app/roomote)
+- Fix: Exclude browser scroll actions from repetition detection (#7470 by @cgrierson-smartsheet, PR by @app/roomote)
+
+## [3.26.1] - 2025-08-27
+
+![3.26.1 Release - Kangaroo Network Engineer](/releases/3.26.1-release.png)
+
+- Add Vercel AI Gateway provider integration (thanks @joshualipman123!)
+- Add support for Vercel embeddings (thanks @mrubens!)
+- Enable on-disk storage for Qdrant vectors and HNSW index (thanks @daniel-lxs!)
+- Show model ID in API configuration dropdown (thanks @daniel-lxs!)
+- Update tooltip component to match native VSCode tooltip shadow styling (thanks @roomote!)
+- Fix: remove duplicate cache display in task header (thanks @mrubens!)
+- Random chat text area cleanup (thanks @cte!)
+
 ## [3.26.0] - 2025-08-26
+
+![3.26.0 Release - Kangaroo Speed Racer](/releases/3.26.0-release.png)
 
 - Sonic -> Grok Code Fast
 - feat: Add Qwen Code CLI API Support with OAuth Authentication (thanks @evinelias and Cline!)

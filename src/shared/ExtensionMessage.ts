@@ -9,8 +9,12 @@ import type {
 	ClineMessage,
 	MarketplaceItem,
 	TodoItem,
+	CloudUserInfo,
+	CloudOrganizationMembership,
+	OrganizationAllowList,
+	ShareVisibility,
+	QueuedMessage,
 } from "@roo-code/types"
-import type { CloudUserInfo, OrganizationAllowList, ShareVisibility } from "@roo-code/cloud"
 
 import { GitCommit } from "../utils/git"
 
@@ -88,6 +92,7 @@ export interface ExtensionMessage {
 		| "checkRulesDirectoryResult"
 		| "deleteCustomModeCheck"
 		| "currentCheckpointUpdated"
+		| "checkpointInitWarning"
 		| "showHumanRelayDialog"
 		| "humanRelayResponse"
 		| "humanRelayCancel"
@@ -120,8 +125,15 @@ export interface ExtensionMessage {
 		| "showEditMessageDialog"
 		| "commands"
 		| "insertTextIntoTextarea"
+		| "dismissedUpsells"
+		| "organizationSwitchResult"
 	text?: string
 	payload?: any // Add a generic payload for now, can refine later
+	// Checkpoint warning message
+	checkpointWarning?: {
+		type: "WAIT_TIMEOUT" | "INIT_TIMEOUT"
+		timeout: number
+	}
 	action?:
 		| "chatButtonClicked"
 		| "mcpButtonClicked"
@@ -129,10 +141,11 @@ export interface ExtensionMessage {
 		| "historyButtonClicked"
 		| "promptsButtonClicked"
 		| "marketplaceButtonClicked"
-		| "accountButtonClicked"
+		| "cloudButtonClicked"
 		| "didBecomeVisible"
 		| "focusInput"
 		| "switchTab"
+		| "toggleAutoApprove"
 	invoke?: "newChat" | "sendMessage" | "primaryButtonClick" | "secondaryButtonClick" | "setChatBoxMessage"
 	state?: ExtensionState
 	images?: string[]
@@ -145,7 +158,7 @@ export interface ExtensionMessage {
 	clineMessage?: ClineMessage
 	routerModels?: RouterModels
 	openAiModels?: string[]
-	ollamaModels?: string[]
+	ollamaModels?: ModelRecord
 	lmStudioModels?: ModelRecord
 	vsCodeLmModels?: { vendor?: string; family?: string; version?: string; id?: string }[]
 	huggingFaceModels?: Array<{
@@ -192,8 +205,12 @@ export interface ExtensionMessage {
 	rulesFolderPath?: string
 	settings?: any
 	messageTs?: number
+	hasCheckpoint?: boolean
 	context?: string
 	commands?: Command[]
+	queuedMessages?: QueuedMessage[]
+	list?: string[] // For dismissedUpsells
+	organizationId?: string | null // For organizationSwitchResult
 }
 
 export type ExtensionState = Pick<
@@ -204,6 +221,7 @@ export type ExtensionState = Pick<
 	// | "lastShownAnnouncementId"
 	| "customInstructions"
 	// | "taskHistory" // Optional in GlobalSettings, required here.
+	| "dismissedUpsells"
 	| "autoApprovalEnabled"
 	| "alwaysAllowReadOnly"
 	| "alwaysAllowReadOnlyOutsideWorkspace"
@@ -217,8 +235,10 @@ export type ExtensionState = Pick<
 	| "alwaysAllowMcp"
 	| "alwaysAllowModeSwitch"
 	| "alwaysAllowSubtasks"
+	| "alwaysAllowFollowupQuestions"
 	| "alwaysAllowExecute"
 	| "alwaysAllowUpdateTodoList"
+	| "followupAutoApproveTimeoutMs"
 	| "allowedCommands"
 	| "deniedCommands"
 	| "allowedMaxRequests"
@@ -227,6 +247,7 @@ export type ExtensionState = Pick<
 	| "browserViewportSize"
 	| "screenshotQuality"
 	| "remoteBrowserEnabled"
+	| "cachedChromeHostUrl"
 	| "remoteBrowserHost"
 	// | "enableCheckpoints" // Optional in GlobalSettings, required here.
 	| "ttsEnabled"
@@ -270,13 +291,17 @@ export type ExtensionState = Pick<
 	| "profileThresholds"
 	| "includeDiagnosticMessages"
 	| "maxDiagnosticMessages"
-	| "remoteControlEnabled"
+	| "openRouterImageGenerationSelectedModel"
+	| "includeTaskHistoryInEnhance"
+	| "reasoningBlockCollapsed"
+	| "includeCurrentTime"
+	| "includeCurrentCost"
 > & {
 	version: string
 	clineMessages: ClineMessage[]
 	currentTaskItem?: HistoryItem
 	currentTaskTodos?: TodoItem[] // Initial todos for the current task
-	apiConfiguration?: ProviderSettings
+	apiConfiguration: ProviderSettings
 	uriScheme?: string
 	shouldShowAnnouncement: boolean
 
@@ -286,6 +311,7 @@ export type ExtensionState = Pick<
 	requestDelaySeconds: number
 
 	enableCheckpoints: boolean
+	checkpointTimeout: number // Timeout for checkpoint initialization in seconds (default: 15)
 	maxOpenTabsContext: number // Maximum number of VSCode open tabs to include in context (0-500)
 	maxWorkspaceFiles: number // Maximum number of files to include in current working directory details (0-500)
 	showRooIgnoredFiles: boolean // Whether to show .rooignore'd files in listings
@@ -314,6 +340,7 @@ export type ExtensionState = Pick<
 	cloudUserInfo: CloudUserInfo | null
 	cloudIsAuthenticated: boolean
 	cloudApiUrl?: string
+	cloudOrganizations?: CloudOrganizationMembership[]
 	sharingEnabled: boolean
 	organizationAllowList: OrganizationAllowList
 	organizationSettingsVersion?: number
@@ -324,6 +351,17 @@ export type ExtensionState = Pick<
 	marketplaceInstalledMetadata?: { project: Record<string, any>; global: Record<string, any> }
 	profileThresholds: Record<string, number>
 	hasOpenedModeSelector: boolean
+	openRouterImageApiKey?: string
+	openRouterUseMiddleOutTransform?: boolean
+	messageQueue?: QueuedMessage[]
+	lastShownAnnouncementId?: string
+	apiModelId?: string
+	mcpServers?: McpServer[]
+	hasSystemPromptOverride?: boolean
+	mdmCompliant?: boolean
+	remoteControlEnabled: boolean
+	taskSyncEnabled: boolean
+	featureRoomoteControlEnabled: boolean
 }
 
 export interface ClineSayTool {
@@ -341,8 +379,10 @@ export interface ClineSayTool {
 		| "switchMode"
 		| "newTask"
 		| "finishTask"
-		| "searchAndReplace"
 		| "insertContent"
+		| "generateImage"
+		| "imageGenerated"
+		| "runSlashCommand"
 	path?: string
 	diff?: string
 	content?: string
@@ -353,12 +393,6 @@ export interface ClineSayTool {
 	isOutsideWorkspace?: boolean
 	isProtected?: boolean
 	additionalFileCount?: number // Number of additional files in the same read_file request
-	search?: string
-	replace?: string
-	useRegex?: boolean
-	ignoreCase?: boolean
-	startLine?: number
-	endLine?: number
 	lineNumber?: number
 	query?: string
 	batchFiles?: Array<{
@@ -379,6 +413,12 @@ export interface ClineSayTool {
 		}>
 	}>
 	question?: string
+	imageData?: string // Base64 encoded image data for generated images
+	// Properties for runSlashCommand tool
+	command?: string
+	args?: string
+	source?: string
+	description?: string
 }
 
 // Must keep in sync with system prompt.

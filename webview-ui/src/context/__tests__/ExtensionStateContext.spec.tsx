@@ -1,6 +1,6 @@
 import { render, screen, act } from "@/utils/test-utils"
 
-import { ProviderSettings, ExperimentId } from "@roo-code/types"
+import { ProviderSettings, ExperimentId, DEFAULT_CHECKPOINT_TIMEOUT_SECONDS } from "@roo-code/types"
 
 import { ExtensionState } from "@roo/ExtensionMessage"
 
@@ -211,12 +211,17 @@ describe("mergeExtensionState", () => {
 			hasOpenedModeSelector: false, // Add the new required property
 			maxImageFileSize: 5,
 			maxTotalImageSize: 20,
+			remoteControlEnabled: false,
+			taskSyncEnabled: false,
+			featureRoomoteControlEnabled: false,
+			checkpointTimeout: DEFAULT_CHECKPOINT_TIMEOUT_SECONDS, // Add the checkpoint timeout property
 		}
 
 		const prevState: ExtensionState = {
 			...baseState,
 			apiConfiguration: { modelMaxTokens: 1234, modelMaxThinkingTokens: 123 },
 			experiments: {} as Record<ExperimentId, boolean>,
+			checkpointTimeout: DEFAULT_CHECKPOINT_TIMEOUT_SECONDS - 5,
 		}
 
 		const newState: ExtensionState = {
@@ -230,7 +235,10 @@ describe("mergeExtensionState", () => {
 				multiFileApplyDiff: true,
 				preventFocusDisruption: false,
 				newTaskRequireTodos: false,
+				imageGeneration: false,
+				runSlashCommand: false,
 			} as Record<ExperimentId, boolean>,
+			checkpointTimeout: DEFAULT_CHECKPOINT_TIMEOUT_SECONDS + 5,
 		}
 
 		const result = mergeExtensionState(prevState, newState)
@@ -248,6 +256,8 @@ describe("mergeExtensionState", () => {
 			multiFileApplyDiff: true,
 			preventFocusDisruption: false,
 			newTaskRequireTodos: false,
+			imageGeneration: false,
+			runSlashCommand: false,
 		})
 	})
 })

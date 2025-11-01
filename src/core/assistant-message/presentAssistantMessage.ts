@@ -15,7 +15,6 @@ import { shouldUseSingleFileRead } from "@roo-code/types"
 import { writeToFileTool } from "../tools/writeToFileTool"
 import { applyDiffTool } from "../tools/multiApplyDiffTool"
 import { insertContentTool } from "../tools/insertContentTool"
-import { searchAndReplaceTool } from "../tools/searchAndReplaceTool"
 import { listCodeDefinitionNamesTool } from "../tools/listCodeDefinitionNamesTool"
 import { searchFilesTool } from "../tools/searchFilesTool"
 import { browserActionTool } from "../tools/browserActionTool"
@@ -28,6 +27,8 @@ import { attemptCompletionTool } from "../tools/attemptCompletionTool"
 import { newTaskTool } from "../tools/newTaskTool"
 
 import { updateTodoListTool } from "../tools/updateTodoListTool"
+import { runSlashCommandTool } from "../tools/runSlashCommandTool"
+import { generateImageTool } from "../tools/generateImageTool"
 
 import { formatResponse } from "../prompts/responses"
 import { validateToolUse } from "../tools/validateToolUse"
@@ -193,8 +194,6 @@ export async function presentAssistantMessage(cline: Task) {
 						}]`
 					case "insert_content":
 						return `[${block.name} for '${block.params.path}']`
-					case "search_and_replace":
-						return `[${block.name} for '${block.params.path}']`
 					case "list_files":
 						return `[${block.name} for '${block.params.path}']`
 					case "list_code_definition_names":
@@ -221,6 +220,10 @@ export async function presentAssistantMessage(cline: Task) {
 						const modeName = getModeBySlug(mode, customModes)?.name ?? mode
 						return `[${block.name} in ${modeName} mode: '${message}']`
 					}
+					case "run_slash_command":
+						return `[${block.name} for '${block.params.command}'${block.params.args ? ` with args: ${block.params.args}` : ""}]`
+					case "generate_image":
+						return `[${block.name} for '${block.params.path}']`
 				}
 			}
 
@@ -457,10 +460,6 @@ export async function presentAssistantMessage(cline: Task) {
 					await checkpointSaveAndMark(cline)
 					await insertContentTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
 					break
-				case "search_and_replace":
-					await checkpointSaveAndMark(cline)
-					await searchAndReplaceTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
-					break
 				case "read_file":
 					// Check if this model should use the simplified single-file read tool
 					const modelId = cline.api.getModel().id
@@ -545,6 +544,12 @@ export async function presentAssistantMessage(cline: Task) {
 						toolDescription,
 						askFinishSubTaskApproval,
 					)
+					break
+				case "run_slash_command":
+					await runSlashCommandTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
+					break
+				case "generate_image":
+					await generateImageTool(cline, block, askApproval, handleError, pushToolResult, removeClosingTag)
 					break
 			}
 
