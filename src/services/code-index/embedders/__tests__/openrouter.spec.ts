@@ -1,5 +1,10 @@
+import { describe, it, expect, beforeEach, vi } from "vitest"
 import { OpenRouterEmbedder } from "../openrouter"
 import { getModelDimension, getDefaultModelId } from "../../../../shared/embeddingModels"
+
+// Mock global fetch
+const mockFetch = vi.fn()
+global.fetch = mockFetch
 
 describe("OpenRouterEmbedder", () => {
 	const mockApiKey = "test-api-key"
@@ -38,21 +43,16 @@ describe("OpenRouterEmbedder", () => {
 
 	describe("createEmbeddings", () => {
 		let embedder: OpenRouterEmbedder
-		const originalFetch = global.fetch
 
 		beforeEach(() => {
 			embedder = new OpenRouterEmbedder(mockApiKey)
-			global.fetch = jest.fn()
-		})
-
-		afterEach(() => {
-			global.fetch = originalFetch
+			mockFetch.mockClear()
 		})
 
 		it("should create embeddings successfully", async () => {
 			const mockResponse = {
 				ok: true,
-				json: jest.fn().mockResolvedValue({
+				json: vi.fn().mockResolvedValue({
 					data: [
 						{
 							embedding: Buffer.from(new Float32Array([0.1, 0.2, 0.3]).buffer).toString("base64"),
@@ -65,7 +65,7 @@ describe("OpenRouterEmbedder", () => {
 				}),
 			}
 
-			;(global.fetch as jest.Mock).mockResolvedValue(mockResponse)
+			mockFetch.mockResolvedValue(mockResponse)
 
 			const result = await embedder.createEmbeddings(["test text"])
 
@@ -78,7 +78,7 @@ describe("OpenRouterEmbedder", () => {
 		it("should handle multiple texts", async () => {
 			const mockResponse = {
 				ok: true,
-				json: jest.fn().mockResolvedValue({
+				json: vi.fn().mockResolvedValue({
 					data: [
 						{
 							embedding: Buffer.from(new Float32Array([0.1, 0.2]).buffer).toString("base64"),
@@ -94,7 +94,7 @@ describe("OpenRouterEmbedder", () => {
 				}),
 			}
 
-			;(global.fetch as jest.Mock).mockResolvedValue(mockResponse)
+			mockFetch.mockResolvedValue(mockResponse)
 
 			const result = await embedder.createEmbeddings(["text1", "text2"])
 
@@ -109,7 +109,7 @@ describe("OpenRouterEmbedder", () => {
 
 			const mockResponse = {
 				ok: true,
-				json: jest.fn().mockResolvedValue({
+				json: vi.fn().mockResolvedValue({
 					data: [
 						{
 							embedding: Buffer.from(new Float32Array([0.1, 0.2]).buffer).toString("base64"),
@@ -122,12 +122,12 @@ describe("OpenRouterEmbedder", () => {
 				}),
 			}
 
-			;(global.fetch as jest.Mock).mockResolvedValue(mockResponse)
+			mockFetch.mockResolvedValue(mockResponse)
 
 			await embedderWithCustomModel.createEmbeddings(["test"])
 
 			// Verify the fetch was called with the custom model
-			expect(global.fetch).toHaveBeenCalledWith(
+			expect(mockFetch).toHaveBeenCalledWith(
 				expect.stringContaining("openrouter.ai/api/v1/embeddings"),
 				expect.objectContaining({
 					body: expect.stringContaining(`"model":"${customModel}"`),
@@ -138,21 +138,16 @@ describe("OpenRouterEmbedder", () => {
 
 	describe("validateConfiguration", () => {
 		let embedder: OpenRouterEmbedder
-		const originalFetch = global.fetch
 
 		beforeEach(() => {
 			embedder = new OpenRouterEmbedder(mockApiKey)
-			global.fetch = jest.fn()
-		})
-
-		afterEach(() => {
-			global.fetch = originalFetch
+			mockFetch.mockClear()
 		})
 
 		it("should validate configuration successfully", async () => {
 			const mockResponse = {
 				ok: true,
-				json: jest.fn().mockResolvedValue({
+				json: vi.fn().mockResolvedValue({
 					data: [
 						{
 							embedding: Buffer.from(new Float32Array([0.1, 0.2]).buffer).toString("base64"),
@@ -161,7 +156,7 @@ describe("OpenRouterEmbedder", () => {
 				}),
 			}
 
-			;(global.fetch as jest.Mock).mockResolvedValue(mockResponse)
+			mockFetch.mockResolvedValue(mockResponse)
 
 			const result = await embedder.validateConfiguration()
 
@@ -173,10 +168,10 @@ describe("OpenRouterEmbedder", () => {
 			const mockResponse = {
 				ok: false,
 				status: 401,
-				text: jest.fn().mockResolvedValue("Unauthorized"),
+				text: vi.fn().mockResolvedValue("Unauthorized"),
 			}
 
-			;(global.fetch as jest.Mock).mockResolvedValue(mockResponse)
+			mockFetch.mockResolvedValue(mockResponse)
 
 			const result = await embedder.validateConfiguration()
 
