@@ -124,7 +124,8 @@
 			"vercelAiGatewayApiKeyRequired": "Vercel AI Gateway APIキーが必要です",
 			"ollamaBaseUrlRequired": "OllamaのベースURLが必要です",
 			"baseUrlRequired": "ベースURLが必要です",
-			"modelDimensionMinValue": "モデルの次元は0より大きくなければなりません"
+			"modelDimensionMinValue": "モデルの次元は0より大きくなければなりません",
+			"openRouterApiKeyRequired": "OpenRouter APIキーが必要です"
 		},
 		"advancedConfigLabel": "詳細設定",
 		"searchMinScoreLabel": "検索スコアのしきい値",

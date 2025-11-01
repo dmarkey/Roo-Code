@@ -124,7 +124,8 @@
 			"vercelAiGatewayApiKeyRequired": "Vercel AI Gateway API-sleutel is vereist",
 			"ollamaBaseUrlRequired": "Ollama basis-URL is vereist",
 			"baseUrlRequired": "Basis-URL is vereist",
-			"modelDimensionMinValue": "Modelafmeting moet groter zijn dan 0"
+			"modelDimensionMinValue": "Modelafmeting moet groter zijn dan 0",
+			"openRouterApiKeyRequired": "OpenRouter API-sleutel is vereist"
 		},
 		"advancedConfigLabel": "Geavanceerde configuratie",
 		"searchMinScoreLabel": "Zoekscore drempel",

@@ -124,7 +124,8 @@
 			"vercelAiGatewayApiKeyRequired": "Требуется API-ключ Vercel AI Gateway",
 			"ollamaBaseUrlRequired": "Требуется базовый URL Ollama",
 			"baseUrlRequired": "Требуется базовый URL",
-			"modelDimensionMinValue": "Размерность модели должна быть больше 0"
+			"modelDimensionMinValue": "Размерность модели должна быть больше 0",
+			"openRouterApiKeyRequired": "Требуется ключ API OpenRouter"
 		},
 		"advancedConfigLabel": "Расширенная конфигурация",
 		"searchMinScoreLabel": "Порог оценки поиска",
