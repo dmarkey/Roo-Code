@@ -315,13 +315,16 @@ export class OpenRouterEmbedder implements IEmbedder {
 	 */
 	private async waitForGlobalRateLimit(): Promise<void> {
 		const release = await OpenRouterEmbedder.globalRateLimitState.mutex.acquire()
+		let mutexReleased = false
+
 		try {
 			const state = OpenRouterEmbedder.globalRateLimitState
 
 			if (state.isRateLimited && state.rateLimitResetTime > Date.now()) {
 				const waitTime = state.rateLimitResetTime - Date.now()
 				// Silent wait - no logging to prevent flooding
-				release() // Release mutex before waiting
+				release()
+				mutexReleased = true
 				await new Promise((resolve) => setTimeout(resolve, waitTime))
 				return
 			}
@@ -333,10 +336,8 @@ export class OpenRouterEmbedder implements IEmbedder {
 			}
 		} finally {
 			// Only release if we haven't already
-			try {
+			if (!mutexReleased) {
 				release()
-			} catch {
-				// Already released
 			}
 		}
 	}
