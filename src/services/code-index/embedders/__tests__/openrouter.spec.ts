@@ -82,6 +82,19 @@ describe("OpenRouterEmbedder", () => {
 			const embedder = new OpenRouterEmbedder(mockApiKey, customModel)
 			expect(embedder.embedderInfo.name).toBe("openrouter")
 		})
+
+		it("should initialize OpenAI client with correct headers", () => {
+			new OpenRouterEmbedder(mockApiKey)
+
+			expect(MockedOpenAI).toHaveBeenCalledWith({
+				baseURL: "https://openrouter.ai/api/v1",
+				apiKey: mockApiKey,
+				defaultHeaders: {
+					"HTTP-Referer": "https://github.com/RooCodeInc/Roo-Code",
+					"X-Title": "Roo Code",
+				},
+			})
+		})
 	})
 
 	describe("embedderInfo", () => {

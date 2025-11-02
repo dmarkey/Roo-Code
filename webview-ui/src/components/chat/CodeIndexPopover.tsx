@@ -691,7 +691,9 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 												<SelectItem value="vercel-ai-gateway">
 													{t("settings:codeIndex.vercelAiGatewayProvider")}
 												</SelectItem>
-												<SelectItem value="openrouter">OpenRouter</SelectItem>
+												<SelectItem value="openrouter">
+													{t("settings:codeIndex.openRouterProvider")}
+												</SelectItem>
 											</SelectContent>
 										</Select>
 									</div>
@@ -1157,14 +1159,16 @@ export const CodeIndexPopover: React.FC<CodeIndexPopoverProps> = ({
 									{currentSettings.codebaseIndexEmbedderProvider === "openrouter" && (
 										<>
 											<div className="space-y-2">
-												<label className="text-sm font-medium">OpenRouter API Key</label>
+												<label className="text-sm font-medium">
+													{t("settings:codeIndex.openRouterApiKeyLabel")}
+												</label>
 												<VSCodeTextField
 													type="password"
 													value={currentSettings.codebaseIndexOpenRouterApiKey || ""}
 													onInput={(e: any) =>
 														updateSetting("codebaseIndexOpenRouterApiKey", e.target.value)
 													}
-													placeholder="Enter your OpenRouter API key"
+													placeholder={t("settings:codeIndex.openRouterApiKeyPlaceholder")}
 													className={cn("w-full", {
 														"border-red-500": formErrors.codebaseIndexOpenRouterApiKey,
 													})}
